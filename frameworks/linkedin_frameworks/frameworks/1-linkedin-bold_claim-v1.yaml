@@ -1,0 +1,29 @@
+framework_id: AUTO_GENERATE
+creator: unknown
+channel: linkedin
+source_file: linkedin_post
+structure:
+- opens with a high-level, assertive thesis statement
+- transitions by introducing a structured list ("5 mental models")
+- presents 5 distinct, numbered mini-lessons (listicle format)
+- signals a structural shift with a narrative transition ("I think about a scene...")
+- shares a short, illustrative anecdote (The Fountainhead)
+- provides a powerful, summarizing mantra/takeaway
+- closes with an external link
+paragraph_style: mixed
+whitespace_use: heavy (line breaks every sentence)
+tone: authoritative
+fits_topics:
+- mindset
+- resilience
+- rejection
+- leadership
+- career
+performance_notes: ''
+raw_excerpt: Not taking things personally is a career (and life) cheat code.
+hook:
+  type: bold_claim
+  first_line: Not taking things personally is a career (and life) cheat code.
+cta:
+  type: none
+  example: ''

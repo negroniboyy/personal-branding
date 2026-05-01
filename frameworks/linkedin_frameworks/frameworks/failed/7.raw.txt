@@ -1,0 +1,24 @@
+framework_id: AUTO_GENERATE
+creator: unknown
+channel: linkedin
+source_file: 1.txt
+hook.type: contrarian
+hook.first_line: I'm going to keep it short.
+structure:
+  - presents a core premise (the internal struggle is harder than the skill)
+  - uses a repetitive, comparative list (X vs. Y pattern) to illustrate the premise
+  - provides a concise summary insight ("Notice the pattern?")
+  - includes a soft-sell Call to Action (P.S. pitch)
+paragraph_style: mixed
+whitespace_use: heavy (line breaks every sentence)
+tone: authoritative
+cta.type: soft_sell
+cta.example: P.S. If you're interested in building your own lifestyle business, we've just opened up spaces to join the next cohort starting in May, you can get more information here 👉 https://lnkd.in/gyxRAv5e
+fits_topics: "mindset" "entrepreneurship" "fear" "action-paralysis" "lifestyle-business"
+performance_notes: ""
+raw_excerpt: |
+  I'm going to keep it short.
+  
+  The hardest part of making money online isn't the "how".
+  
+  It's getting over your fears and excuses.

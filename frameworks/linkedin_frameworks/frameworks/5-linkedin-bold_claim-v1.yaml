@@ -1,0 +1,26 @@
+framework_id: AUTO_GENERATE
+creator: unknown
+channel: linkedin
+source_file: 5.txt
+structure:
+- establishes a relatable premise (working long hours)
+- provides highly actionable, copy-and-paste advice
+- pivots to a strong, generalized thesis statement (execution > ideas)
+- provides an external resource/link
+paragraph_style: short_punchy
+whitespace_use: heavy (line breaks every sentence)
+tone: authoritative
+performance_notes: ''
+fits_topics:
+- productivity
+- execution
+- prioritization
+- time-management
+- career
+raw_excerpt: If you work more than 8 hours a day.
+hook:
+  type: bold_claim
+  first_line: If you work more than 8 hours a day.
+cta:
+  type: none
+  example: ''

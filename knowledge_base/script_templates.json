@@ -1,0 +1,132 @@
+[
+  {
+    "id": "reel_problem_relief_30s",
+    "name": "Reel Problema para Alivio (30s)",
+    "funnel_stage": "top",
+    "duration_seconds": 30,
+    "required_fields": [
+      "persona",
+      "pain_point",
+      "safe_tip",
+      "cta"
+    ],
+    "structure": [
+      "Hook: dor real em 1 frase",
+      "Contexto: por que isso acontece no dia a dia",
+      "Alivio: dica simples e segura",
+      "CTA: salvar ou compartilhar"
+    ],
+    "sources": [
+      "atomy_audiencia",
+      "atomy_plano_marketing",
+      "eliasmaman"
+    ]
+  },
+  {
+    "id": "reel_simple_routine_45s",
+    "name": "Reel Rotina Simples (45s)",
+    "funnel_stage": "middle",
+    "duration_seconds": 45,
+    "required_fields": [
+      "routine_context",
+      "steps",
+      "common_mistake",
+      "cta"
+    ],
+    "structure": [
+      "Hook: rotina curta e realista",
+      "Passo 1-3: instrucoes simples",
+      "Erro comum: o que evitar",
+      "CTA: comentar duvida"
+    ],
+    "sources": [
+      "vanessa_laus_content_strategy_guide_2020present",
+      "atomy_plano_marketing"
+    ]
+  },
+  {
+    "id": "story_dm_bridge",
+    "name": "Stories Ponte para DM",
+    "funnel_stage": "bottom",
+    "duration_seconds": 20,
+    "required_fields": [
+      "problem_signal",
+      "guidance_offer",
+      "dm_invite"
+    ],
+    "structure": [
+      "Story 1: pergunta de dor",
+      "Story 2: mini resposta pratica",
+      "Story 3: convite para DM com palavra-chave"
+    ],
+    "sources": [
+      "russell_brunsons_content_creation_playbook_for_e_commerce_on_instagram_2020present",
+      "atomy_plano_marketing"
+    ]
+  },
+  {
+    "id": "carousel_education_7slides",
+    "name": "Carousel Educativo 7 Slides",
+    "funnel_stage": "middle",
+    "duration_seconds": 0,
+    "required_fields": [
+      "topic",
+      "mistakes",
+      "tips",
+      "cta"
+    ],
+    "structure": [
+      "Slide 1: titulo/pergunta",
+      "Slides 2-6: dicas objetivas",
+      "Slide 7: resumo + CTA"
+    ],
+    "sources": [
+      "vanessa_laus_content_strategy_guide_2020present",
+      "alex_hormozis_content_creation_strategy_20222024_workflow_mindset_framework"
+    ]
+  },
+  {
+    "id": "testimonial_emotional_before_after",
+    "name": "Depoimento Emocional Antes e Depois",
+    "funnel_stage": "middle",
+    "duration_seconds": 30,
+    "required_fields": [
+      "starting_state",
+      "routine_shift",
+      "current_feeling",
+      "cta"
+    ],
+    "structure": [
+      "Antes: como se sentia",
+      "Mudanca: o que ajustou na rotina",
+      "Depois: como se sente hoje",
+      "CTA: incentivo sem promessas medicas"
+    ],
+    "sources": [
+      "atomy_plano_marketing",
+      "mirella_20crespi_e2_80_99s_20methodology"
+    ]
+  },
+  {
+    "id": "myth_vs_simple_truth",
+    "name": "Mito vs Verdade Simples",
+    "funnel_stage": "top",
+    "duration_seconds": 25,
+    "required_fields": [
+      "myth",
+      "truth",
+      "practical_takeaway",
+      "cta"
+    ],
+    "structure": [
+      "Mito em 1 frase",
+      "Verdade em linguagem simples",
+      "Como aplicar hoje",
+      "CTA: salvar para lembrar"
+    ],
+    "sources": [
+      "mirella_20crespi_e2_80_99s_20methodology",
+      "eliasmaman"
+    ]
+  }
+]

@@ -1,0 +1,421 @@
+[
+  {
+    "id": "alex_hormozis_content_creation_strategy_20222024_workflow_mindset_framework",
+    "title": "Alex Hormozi’s Content Creation Strategy (2022–2024) – Workflow, Mindset & Framework.pdf",
+    "categories": [
+      "idea_generation",
+      "script_templates",
+      "strategy"
+    ],
+    "agent_targets": [
+      "copywriter",
+      "digital_marketing",
+      "market_research",
+      "orchestrator",
+      "videography"
+    ],
+    "source_priority": 74,
+    "source_role": "packaging_rules",
+    "safe_for_copy": true,
+    "copy_mode": "direct_with_review",
+    "language_hint": "mixed",
+    "retrieval": {
+      "max_snippets": 5,
+      "max_chars_per_snippet": 280,
+      "default_fields": [
+        "executive_bullets",
+        "top_terms"
+      ]
+    },
+    "summary_file": "/Users/maxkiyuna/Library/CloudStorage/GoogleDrive-max.taishi@gmail.com/My Drive/VIBECODE/MyProgramLab/Atomy Marketing/data/knowledge_normalized/alex_hormozis_content_creation_strategy_20222024_workflow_mindset_framework.summary.md",
+    "meta_file": "/Users/maxkiyuna/Library/CloudStorage/GoogleDrive-max.taishi@gmail.com/My Drive/VIBECODE/MyProgramLab/Atomy Marketing/data/knowledge_normalized/alex_hormozis_content_creation_strategy_20222024_workflow_mindset_framework.meta.json",
+    "source_file": "/Users/maxkiyuna/Library/CloudStorage/GoogleDrive-max.taishi@gmail.com/My Drive/VIBECODE/MyProgramLab/Atomy Marketing/knowledge_base/Alex Hormozi’s Content Creation Strategy (2022–2024) – Workflow, Mindset & Framework.pdf",
+    "top_terms": [
+      "content",
+      "hormozi",
+      "his",
+      "your",
+      "video",
+      "audience",
+      "from",
+      "can",
+      "one",
+      "twitter",
+      "into",
+      "value",
+      "youtube",
+      "business",
+      "often"
+    ],
+    "suggested_uses": [
+      "Use for content-angle and hook generation guidance.",
+      "Use for persona and pain-point enrichment.",
+      "Use for copywriter template references.",
+      "Use for experiment design and review analytics."
+    ]
+  },
+  {
+    "id": "atomy_audiencia",
+    "title": "Atomy_audiencia.docx",
+    "categories": [
+      "audience"
+    ],
+    "agent_targets": [
+      "copywriter",
+      "digital_marketing",
+      "market_research"
+    ],
+    "source_priority": 100,
+    "source_role": "audience_truths",
+    "safe_for_copy": true,
+    "copy_mode": "direct_with_review",
+    "language_hint": "pt-BR",
+    "retrieval": {
+      "max_snippets": 5,
+      "max_chars_per_snippet": 280,
+      "default_fields": [
+        "executive_bullets",
+        "top_terms"
+      ]
+    },
+    "summary_file": "/Users/maxkiyuna/Library/CloudStorage/GoogleDrive-max.taishi@gmail.com/My Drive/VIBECODE/MyProgramLab/Atomy Marketing/data/knowledge_normalized/atomy_audiencia.summary.md",
+    "meta_file": "/Users/maxkiyuna/Library/CloudStorage/GoogleDrive-max.taishi@gmail.com/My Drive/VIBECODE/MyProgramLab/Atomy Marketing/data/knowledge_normalized/atomy_audiencia.meta.json",
+    "source_file": "/Users/maxkiyuna/Library/CloudStorage/GoogleDrive-max.taishi@gmail.com/My Drive/VIBECODE/MyProgramLab/Atomy Marketing/knowledge_base/Atomy_audiencia.docx",
+    "top_terms": [
+      "pele",
+      "não",
+      "autocuidado",
+      "mais",
+      "quando",
+      "sem",
+      "skincare",
+      "algo",
+      "aparência",
+      "autoestima",
+      "bem",
+      "cuidar",
+      "filhos",
+      "gatilho",
+      "produtos"
+    ],
+    "suggested_uses": [
+      "Use as background strategic reference for planning."
+    ]
+  },
+  {
+    "id": "atomy_plano_marketing",
+    "title": "ATOMY PLANO MARKETING.docx",
+    "categories": [
+      "strategy"
+    ],
+    "agent_targets": [
+      "copywriter",
+      "digital_marketing",
+      "market_research",
+      "orchestrator"
+    ],
+    "source_priority": 95,
+    "source_role": "brand_guardrails",
+    "safe_for_copy": true,
+    "copy_mode": "direct_with_review",
+    "language_hint": "pt-BR",
+    "retrieval": {
+      "max_snippets": 5,
+      "max_chars_per_snippet": 280,
+      "default_fields": [
+        "executive_bullets",
+        "top_terms"
+      ]
+    },
+    "summary_file": "/Users/maxkiyuna/Library/CloudStorage/GoogleDrive-max.taishi@gmail.com/My Drive/VIBECODE/MyProgramLab/Atomy Marketing/data/knowledge_normalized/atomy_plano_marketing.summary.md",
+    "meta_file": "/Users/maxkiyuna/Library/CloudStorage/GoogleDrive-max.taishi@gmail.com/My Drive/VIBECODE/MyProgramLab/Atomy Marketing/data/knowledge_normalized/atomy_plano_marketing.meta.json",
+    "source_file": "/Users/maxkiyuna/Library/CloudStorage/GoogleDrive-max.taishi@gmail.com/My Drive/VIBECODE/MyProgramLab/Atomy Marketing/knowledge_base/ATOMY PLANO MARKETING.docx",
+    "top_terms": [
+      "sem",
+      "não",
+      "pele",
+      "você",
+      "autocuidado",
+      "confiança",
+      "mais",
+      "meses",
+      "atomy",
+      "conteúdo",
+      "produtos",
+      "rotina",
+      "simples",
+      "skincare",
+      "sua"
+    ],
+    "suggested_uses": [
+      "Use for content-angle and hook generation guidance."
+    ]
+  },
+  {
+    "id": "eliasmaman",
+    "title": "EliasMaman.md",
+    "categories": [
+      "idea_generation",
+      "script_templates",
+      "strategy"
+    ],
+    "agent_targets": [
+      "copywriter",
+      "digital_marketing",
+      "market_research",
+      "orchestrator",
+      "videography"
+    ],
+    "source_priority": 92,
+    "source_role": "engagement_rules",
+    "safe_for_copy": true,
+    "copy_mode": "direct_with_review",
+    "language_hint": "mixed",
+    "retrieval": {
+      "max_snippets": 5,
+      "max_chars_per_snippet": 280,
+      "default_fields": [
+        "executive_bullets",
+        "top_terms"
+      ]
+    },
+    "summary_file": "/Users/maxkiyuna/Library/CloudStorage/GoogleDrive-max.taishi@gmail.com/My Drive/VIBECODE/MyProgramLab/Atomy Marketing/data/knowledge_normalized/eliasmaman.summary.md",
+    "meta_file": "/Users/maxkiyuna/Library/CloudStorage/GoogleDrive-max.taishi@gmail.com/My Drive/VIBECODE/MyProgramLab/Atomy Marketing/data/knowledge_normalized/eliasmaman.meta.json",
+    "source_file": "/Users/maxkiyuna/Library/CloudStorage/GoogleDrive-max.taishi@gmail.com/My Drive/VIBECODE/MyProgramLab/Atomy Marketing/knowledge_base/EliasMaman.md",
+    "top_terms": [
+      "cite",
+      "cta",
+      "comments",
+      "hook",
+      "reels",
+      "content",
+      "are",
+      "your",
+      "caption",
+      "comment",
+      "question",
+      "example",
+      "must",
+      "what",
+      "2025"
+    ],
+    "suggested_uses": [
+      "Use for content-angle and hook generation guidance.",
+      "Use for persona and pain-point enrichment.",
+      "Use for copywriter template references.",
+      "Use for experiment design and review analytics."
+    ]
+  },
+  {
+    "id": "mirella_20crespi_e2_80_99s_20methodology",
+    "title": "Mirella%20Crespi%E2%80%99s%20Methodology.txt",
+    "categories": [
+      "idea_generation",
+      "script_templates",
+      "strategy"
+    ],
+    "agent_targets": [
+      "copywriter",
+      "digital_marketing",
+      "market_research",
+      "orchestrator",
+      "videography"
+    ],
+    "source_priority": 75,
+    "source_role": "experimentation_rules",
+    "safe_for_copy": true,
+    "copy_mode": "direct_with_review",
+    "language_hint": "mixed",
+    "retrieval": {
+      "max_snippets": 5,
+      "max_chars_per_snippet": 280,
+      "default_fields": [
+        "executive_bullets",
+        "top_terms"
+      ]
+    },
+    "summary_file": "/Users/maxkiyuna/Library/CloudStorage/GoogleDrive-max.taishi@gmail.com/My Drive/VIBECODE/MyProgramLab/Atomy Marketing/data/knowledge_normalized/mirella_20crespi_e2_80_99s_20methodology.summary.md",
+    "meta_file": "/Users/maxkiyuna/Library/CloudStorage/GoogleDrive-max.taishi@gmail.com/My Drive/VIBECODE/MyProgramLab/Atomy Marketing/data/knowledge_normalized/mirella_20crespi_e2_80_99s_20methodology.meta.json",
+    "source_file": "/Users/maxkiyuna/Library/CloudStorage/GoogleDrive-max.taishi@gmail.com/My Drive/VIBECODE/MyProgramLab/Atomy Marketing/knowledge_base/Mirella%20Crespi%E2%80%99s%20Methodology.txt",
+    "top_terms": [
+      "crespi",
+      "creative",
+      "her",
+      "ads",
+      "product",
+      "she",
+      "can",
+      "hook",
+      "new",
+      "video",
+      "are",
+      "brand",
+      "they",
+      "might",
+      "team"
+    ],
+    "suggested_uses": [
+      "Use for content-angle and hook generation guidance.",
+      "Use for persona and pain-point enrichment.",
+      "Use for copywriter template references.",
+      "Use for experiment design and review analytics."
+    ]
+  },
+  {
+    "id": "russell_brunsons_content_creation_playbook_for_e_commerce_on_instagram_2020present",
+    "title": "Russell Brunson’s Content Creation Playbook for E-Commerce on Instagram (2020–Present).pdf",
+    "categories": [
+      "idea_generation",
+      "script_templates",
+      "strategy"
+    ],
+    "agent_targets": [
+      "copywriter",
+      "digital_marketing",
+      "market_research",
+      "orchestrator",
+      "videography"
+    ],
+    "source_priority": 72,
+    "source_role": "funnel_rules",
+    "safe_for_copy": true,
+    "copy_mode": "direct_with_review",
+    "language_hint": "mixed",
+    "retrieval": {
+      "max_snippets": 5,
+      "max_chars_per_snippet": 280,
+      "default_fields": [
+        "executive_bullets",
+        "top_terms"
+      ]
+    },
+    "summary_file": "/Users/maxkiyuna/Library/CloudStorage/GoogleDrive-max.taishi@gmail.com/My Drive/VIBECODE/MyProgramLab/Atomy Marketing/data/knowledge_normalized/russell_brunsons_content_creation_playbook_for_e_commerce_on_instagram_2020present.summary.md",
+    "meta_file": "/Users/maxkiyuna/Library/CloudStorage/GoogleDrive-max.taishi@gmail.com/My Drive/VIBECODE/MyProgramLab/Atomy Marketing/data/knowledge_normalized/russell_brunsons_content_creation_playbook_for_e_commerce_on_instagram_2020present.meta.json",
+    "source_file": "/Users/maxkiyuna/Library/CloudStorage/GoogleDrive-max.taishi@gmail.com/My Drive/VIBECODE/MyProgramLab/Atomy Marketing/knowledge_base/Russell Brunson’s Content Creation Playbook for E-Commerce on Instagram (2020–Present).pdf",
+    "top_terms": [
+      "your",
+      "content",
+      "brunson",
+      "funnel",
+      "can",
+      "product",
+      "story",
+      "posts",
+      "brand",
+      "stories",
+      "instagram",
+      "offer",
+      "like",
+      "use",
+      "post"
+    ],
+    "suggested_uses": [
+      "Use for content-angle and hook generation guidance.",
+      "Use for persona and pain-point enrichment.",
+      "Use for copywriter template references.",
+      "Use for experiment design and review analytics."
+    ]
+  },
+  {
+    "id": "titulos_seguidores",
+    "title": "Titulos_Seguidores.docx",
+    "categories": [
+      "title_templates"
+    ],
+    "agent_targets": [
+      "copywriter"
+    ],
+    "source_priority": 80,
+    "source_role": "title_patterns",
+    "safe_for_copy": false,
+    "copy_mode": "pattern_only",
+    "language_hint": "pt-BR",
+    "retrieval": {
+      "max_snippets": 5,
+      "max_chars_per_snippet": 280,
+      "default_fields": [
+        "executive_bullets",
+        "top_terms"
+      ]
+    },
+    "summary_file": "/Users/maxkiyuna/Library/CloudStorage/GoogleDrive-max.taishi@gmail.com/My Drive/VIBECODE/MyProgramLab/Atomy Marketing/data/knowledge_normalized/titulos_seguidores.summary.md",
+    "meta_file": "/Users/maxkiyuna/Library/CloudStorage/GoogleDrive-max.taishi@gmail.com/My Drive/VIBECODE/MyProgramLab/Atomy Marketing/data/knowledge_normalized/titulos_seguidores.meta.json",
+    "source_file": "/Users/maxkiyuna/Library/CloudStorage/GoogleDrive-max.taishi@gmail.com/My Drive/VIBECODE/MyProgramLab/Atomy Marketing/knowledge_base/Titulos_Seguidores.docx",
+    "top_terms": [
+      "como",
+      "você",
+      "audiência",
+      "pela",
+      "não",
+      "isso",
+      "algo",
+      "cat",
+      "conhecido",
+      "fazer",
+      "desejo",
+      "porque",
+      "sem",
+      "quando",
+      "coisas"
+    ],
+    "suggested_uses": [
+      "Use for content-angle and hook generation guidance.",
+      "Use for copywriter template references."
+    ]
+  },
+  {
+    "id": "vanessa_laus_content_strategy_guide_2020present",
+    "title": "Vanessa Lau’s Content Strategy Guide (2020–Present).pdf",
+    "categories": [
+      "idea_generation",
+      "script_templates",
+      "strategy"
+    ],
+    "agent_targets": [
+      "copywriter",
+      "digital_marketing",
+      "market_research",
+      "orchestrator",
+      "videography"
+    ],
+    "source_priority": 76,
+    "source_role": "shareability_rules",
+    "safe_for_copy": true,
+    "copy_mode": "direct_with_review",
+    "language_hint": "mixed",
+    "retrieval": {
+      "max_snippets": 5,
+      "max_chars_per_snippet": 280,
+      "default_fields": [
+        "executive_bullets",
+        "top_terms"
+      ]
+    },
+    "summary_file": "/Users/maxkiyuna/Library/CloudStorage/GoogleDrive-max.taishi@gmail.com/My Drive/VIBECODE/MyProgramLab/Atomy Marketing/data/knowledge_normalized/vanessa_laus_content_strategy_guide_2020present.summary.md",
+    "meta_file": "/Users/maxkiyuna/Library/CloudStorage/GoogleDrive-max.taishi@gmail.com/My Drive/VIBECODE/MyProgramLab/Atomy Marketing/data/knowledge_normalized/vanessa_laus_content_strategy_guide_2020present.meta.json",
+    "source_file": "/Users/maxkiyuna/Library/CloudStorage/GoogleDrive-max.taishi@gmail.com/My Drive/VIBECODE/MyProgramLab/Atomy Marketing/knowledge_base/Vanessa Lau’s Content Strategy Guide (2020–Present).pdf",
+    "top_terms": [
+      "content",
+      "your",
+      "vanessa",
+      "her",
+      "she",
+      "can",
+      "posts",
+      "skincare",
+      "brand",
+      "followers",
+      "instagram",
+      "like",
+      "use",
+      "more",
+      "share"
+    ],
+    "suggested_uses": [
+      "Use for content-angle and hook generation guidance.",
+      "Use for persona and pain-point enrichment.",
+      "Use for copywriter template references.",
+      "Use for experiment design and review analytics."
+    ]
+  }
+]

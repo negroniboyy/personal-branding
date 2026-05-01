@@ -1,0 +1,34 @@
+You are a content framework analyst. Given a LinkedIn post, extract its structural pattern into a YAML framework.
+
+**OUTPUT: Return ONLY valid YAML. No markdown fences. No explanation. No preamble.**
+
+---
+
+FIELD INSTRUCTIONS:
+
+- framework_id: leave as "AUTO_GENERATE" — we will generate this from creator+channel+hook_type after extraction
+- creator: infer from the post author name/handle if visible, otherwise "unknown"
+- channel: always "linkedin"
+- source_file: the original filename (e.g. "1.txt")
+- hook.type: choose ONE of: bold_claim | question | story_open | stat | pain_point | contrarian
+- hook.first_line: the very first line of the post, exact or closely paraphrased
+- structure: list each distinct content beat in the order it appears. Be specific — e.g. "poses a rhetorical question", "presents a 3-item framework", "shares a short cautionary anecdote", "closes with a direct call to action". Do not combine multiple beats into one entry.
+- paragraph_style: short_punchy | long_form | mixed
+- whitespace_use: heavy (line breaks every sentence) | moderate | minimal
+- tone: direct | conversational | authoritative | vulnerable
+- cta.type: question | soft_sell | save_this | follow | none
+- cta.example: if type is not "none", copy the actual CTA text from the post
+- fits_topics: 3-5 concrete nouns only — e.g. "productivity", "burnout", "consistency", "mindset", "career", "leadership", "imposter-syndrome", "networking". NOT vague labels like "general", "motivation", "advice".
+- performance_notes: leave entirely blank (empty string) — fill this in later after review
+- raw_excerpt: the first 3 lines of the post, verbatim, no editing
+
+**IMPORTANT RULES:**
+- If a field is ambiguous, make a reasoned best guess and fill it. Never leave a required field empty.
+- Return valid YAML with all required fields present.
+- fits_topics must be concrete nouns or hyphenated phrases — no verbs, no adjectives.
+
+---
+
+LINKEDIN POST TO ANALYZE:
+
+{{POST_TEXT}}

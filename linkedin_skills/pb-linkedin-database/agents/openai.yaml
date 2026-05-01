@@ -1,0 +1,4 @@
+interface:
+  display_name: "pb_linkedin_database"
+  short_description: "Track LinkedIn content and performance in SQLite."
+  default_prompt: "Use $pb-linkedin-database to initialize the LinkedIn content database, ingest tracked content rows, and summarize performance patterns."

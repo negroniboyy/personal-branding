@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c \"from notion_client import Client; c = Client\\(auth='test'\\); print\\(dir\\(c\\)\\)\")",
+      "Bash(python3 -c \"from notion_client import Client; c = Client\\(auth='test'\\); print\\([m for m in dir\\(c.databases\\) if not m.startswith\\('_'\\)]\\)\")",
+      "Bash(python3)",
+      "Bash(uv pip *)",
+      "Bash(uv run *)",
+      "Bash(uv sync *)",
+      "Bash(python '~/.claude/skills/session-checkpoint/scripts/build_code_memory.py' --repo-root '/Users/maxkiyuna/Documents/personal_brand/NOTION DIARY FETCHER' --output '/Users/maxkiyuna/Documents/personal_brand/NOTION DIARY FETCHER/md' --mode full --no-docs)",
+      "Bash(python3 '~/.claude/skills/session-checkpoint/scripts/build_code_memory.py' --repo-root '/Users/maxkiyuna/Documents/personal_brand/NOTION DIARY FETCHER' --output '/Users/maxkiyuna/Documents/personal_brand/NOTION DIARY FETCHER/md' --mode full --no-docs)"
+    ]
+  }
+}

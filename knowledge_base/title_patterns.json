@@ -1,0 +1,183 @@
+[
+  {
+    "id": "tp_001",
+    "template": "Como {beneficio} sem {barreira}",
+    "category": "how_to_no_friction",
+    "examples": [
+      "Como Eu Faço Desejo Com Algo Conhecido Pela Audiência Em Tanto Tempo Sem Objeção",
+      "Como eu perco 2kg por semana tomando chá verde sem fazer musculação",
+      "Como eu ganho 2.000 mil reais por semana no Poker sem passar a madrugada jogando",
+      "Como Desejo Sem Precisar Objeção"
+    ],
+    "safety_notes": [
+      "Use only for skincare/self-care context.",
+      "Avoid medical or guaranteed-result language.",
+      "Human review required before publishing."
+    ]
+  },
+  {
+    "id": "tp_002",
+    "template": "Como {resultado_desejado}",
+    "category": "how_to",
+    "examples": [
+      "Como ter pele de coreana",
+      "Como Aprender a investir na prática",
+      "Como acordar cedo e disposto todos os dias",
+      "Como Aprender a investir na prática"
+    ],
+    "safety_notes": [
+      "Use only for skincare/self-care context.",
+      "Avoid medical or guaranteed-result language.",
+      "Human review required before publishing."
+    ]
+  },
+  {
+    "id": "tp_003",
+    "template": "Como {resultado} em {tempo_realista}",
+    "category": "how_to_timeboxed",
+    "examples": [
+      "Como Desejo em Menos de X Tempo",
+      "Como ganhar 3 mil por mês montando uma loja virtual em casa",
+      "Como um único hábito me transformou em um bom conversador"
+    ],
+    "safety_notes": [
+      "Use only for skincare/self-care context.",
+      "Avoid medical or guaranteed-result language.",
+      "Human review required before publishing."
+    ]
+  },
+  {
+    "id": "tp_004",
+    "template": "Nunca {erro_comum}: {acao_segura}",
+    "category": "warning",
+    "examples": [
+      "Nunca Mais Tenha Esse Dor / Problema - Faça Isso",
+      "Nunca Mais Perca Dinheiro Com Tráfego Pago - Use Esse Truque Simples",
+      "Nunca Faça Algo Conhecido Pela Audiência Desse Jeito",
+      "Nunca faça exercícios em casa desse jeito"
+    ],
+    "safety_notes": [
+      "Use only for skincare/self-care context.",
+      "Avoid medical or guaranteed-result language.",
+      "Human review required before publishing."
+    ]
+  },
+  {
+    "id": "tp_005",
+    "template": "O que acontece quando {situacao_comum}",
+    "category": "curiosity",
+    "examples": [
+      "O que acontece quando Situação/Hábitos Comuns ou Algo Conhecido Pela Audiência",
+      "O que acontece quando você acorda as 5 da manhã",
+      "O que acontece quando você lê todos os dias"
+    ],
+    "safety_notes": [
+      "Use only for skincare/self-care context.",
+      "Avoid medical or guaranteed-result language.",
+      "Human review required before publishing."
+    ]
+  },
+  {
+    "id": "tp_006",
+    "template": "O que fazer quando {situacao_comum}",
+    "category": "decision",
+    "examples": [
+      "O Que Fazer Quando Dor / Problema",
+      "O Que fazer quando ela não responde sua mensagem de texto",
+      "O que fazer quando ela desmarcar o encontro em cima da hora",
+      "O Que Fazer Quando Avatar Dentro Dessas Características / Situação / Hábito Comum Acontece"
+    ],
+    "safety_notes": [
+      "Use only for skincare/self-care context.",
+      "Avoid medical or guaranteed-result language.",
+      "Human review required before publishing."
+    ]
+  },
+  {
+    "id": "tp_007",
+    "template": "{N} {coisas} que {resultado}",
+    "category": "listicle",
+    "examples": [
+      "7 Exercises to Build Bigger Arms Without Heavy Weights",
+      "5 Formas de Vender MUITO sem Usar Tráfego Pago",
+      "10 Things SLOWLY Making You UGLY!",
+      "5 Frases que fazem uma mulher te desejar"
+    ],
+    "safety_notes": [
+      "Use only for skincare/self-care context.",
+      "Avoid medical or guaranteed-result language.",
+      "Human review required before publishing."
+    ]
+  },
+  {
+    "id": "tp_008",
+    "template": "{titulo_curto_com_dor_ou_desejo_real}",
+    "category": "generic",
+    "examples": [
+      "Recompensa “#Pele de coreana",
+      "Desejo e Desejo em Tanto Tempo",
+      "SMALLER WAIST and LOSE BELLY FAT in 14 Days | Home Workout",
+      "Get BIGGER Without Getting FAT! (Lean Bulking Tricks)"
+    ],
+    "safety_notes": [
+      "Use only for skincare/self-care context.",
+      "Avoid medical or guaranteed-result language.",
+      "Human review required before publishing."
+    ]
+  },
+  {
+    "id": "tp_009",
+    "template": "{N} erros que atrapalham {resultado}",
+    "category": "listicle",
+    "examples": [],
+    "safety_notes": [
+      "Use only for skincare/self-care context.",
+      "Avoid medical or guaranteed-result language.",
+      "Human review required before publishing."
+    ]
+  },
+  {
+    "id": "tp_010",
+    "template": "Mito ou verdade: {tema}",
+    "category": "myth_buster",
+    "examples": [],
+    "safety_notes": [
+      "Use only for skincare/self-care context.",
+      "Avoid medical or guaranteed-result language.",
+      "Human review required before publishing."
+    ]
+  },
+  {
+    "id": "tp_011",
+    "template": "Rotina simples de {tema} para {persona}",
+    "category": "routine",
+    "examples": [],
+    "safety_notes": [
+      "Use only for skincare/self-care context.",
+      "Avoid medical or guaranteed-result language.",
+      "Human review required before publishing."
+    ]
+  },
+  {
+    "id": "tp_012",
+    "template": "Sinais de que {situacao} pode melhorar com {acao_simples}",
+    "category": "signals",
+    "examples": [],
+    "safety_notes": [
+      "Use only for skincare/self-care context.",
+      "Avoid medical or guaranteed-result language.",
+      "Human review required before publishing."
+    ]
+  },
+  {
+    "id": "tp_013",
+    "template": "Pare de {erro_comum}: tente {alternativa_segura}",
+    "category": "warning",
+    "examples": [],
+    "safety_notes": [
+      "Use only for skincare/self-care context.",
+      "Avoid medical or guaranteed-result language.",
+      "Human review required before publishing."
+    ]
+  }
+]

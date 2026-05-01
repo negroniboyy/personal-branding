@@ -1,0 +1,36 @@
+Claude Code best practices are a game changer for agentic workflows.
+
+Andrej Karpathy pointed out that LLMs make wrong assumptions, overcomplicate code, and touch things they shouldn't. Predictable mistakes, every single time.
+
+forrestchang took those observations and turned them into four behavioral principles inside one markdown file you drop into any Claude Code project.
+
+Here's what the repo actually solves:
+
+1/ Think Before Coding
+
+LLMs love to pick an interpretation silently and just run with it. This principle forces Claude to state assumptions explicitly, present multiple interpretations when ambiguity exists, and push back when a simpler approach is available. No more guessing on your behalf.
+
+2/ Simplicity First
+
+If your AI assistant writes 1000 lines when 100 would do... that's not help. This blocks speculative features, prevents abstractions for single-use code, and kills "flexibility" or "configurability" that nobody requested. The test: would a senior engineer call this overcomplicated? If yes, simplify.
+
+3/ Surgical Changes
+
+When editing existing code, Claude won't "improve" adjacent code or reformat things that aren't broken. It matches existing style even if it would do things differently. If your changes create orphaned imports or dead functions, clean those up. But pre-existing dead code? Flag it, don't delete it.
+
+4/ Goal-Driven Execution
+
+Instead of vague instructions like "add validation," it transforms tasks into verifiable goals: "write tests for invalid inputs, then make them pass." Every multi-step task gets a plan with verification checkpoints. Step, verify, repeat.
+
+The install takes seconds. Works as a Claude Code plugin or a per-project CLAUDE.md that merges with your existing rules.
+
+You know it's working when diffs get smaller, clarifying questions come before implementation, and PRs stop carrying drive-by refactors.
+
+Context engineering for AI coding is becoming its own discipline. This repo is proof that the best fix for LLM behavior isn't a better model... it's better instructions.
+
+Link in the first comment.
+https://www.linkedin.com/posts/zainkahn_claude-code-best-practices-are-a-game-changer-share-7450885944154484736-xj-t?utm_source=share&utm_medium=member_desktop&rcm=ACoAACL8e2oBbBVertf-MWdNblYGXAvryvrHf-U
+
+
+
+

@@ -1,0 +1,30 @@
+framework_id: AUTO_GENERATE
+creator: unknown
+channel: linkedin
+source_file: linkedin_post
+structure:
+- states an immediate premise ("I'm going to keep it short.")
+- presents a core thesis statement (The struggle is internal, not logistical)
+- structures five explicit rebuttals using a visual ❌ vs ✅ pattern
+- summarizes the pattern, connecting limiting beliefs to comfort
+- provides a soft-sell P.S. with a promotional link
+- includes external metadata links
+paragraph_style: short_punchy
+whitespace_use: heavy (line breaks every sentence)
+tone: direct
+fits_topics:
+- mindset
+- online business
+- limiting-belief
+- self-doubt
+- action
+performance_notes: ''
+raw_excerpt: I'm going to keep it short.
+hook:
+  type: pain_point
+  first_line: I'm going to keep it short.
+cta:
+  type: soft_sell
+  example: If you're interested in building your own lifestyle business, we've just
+    opened up spaces to join the next cohort starting in May, you can get more information
+    here 👉 https://lnkd.in/gyxRAv5e

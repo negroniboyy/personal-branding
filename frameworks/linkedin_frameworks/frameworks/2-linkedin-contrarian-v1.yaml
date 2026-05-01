@@ -1,0 +1,34 @@
+framework_id: AUTO_GENERATE
+creator: Nina Devouge
+channel: linkedin
+source_file: 2.txt
+structure:
+- poses a strong, counter-intuitive claim about career success
+- introduces a general observation (the importance of the first boss)
+- dismisses common assumptions about leadership trustworthiness
+- presents a core thesis (manager, not role, dictates career growth)
+- lists three key areas where the manager's influence is felt (delegation, advocacy,
+  potential)
+- provides actionable advice/framework for leaders (pre-onboarding questions)
+- provides highly actionable advice/framework for job seekers (negotiating the relationship)
+- concludes with a definitive statement about dependency
+- includes a call to action for sharing/repurposing the content
+paragraph_style: short_punchy
+whitespace_use: heavy (line breaks every sentence)
+tone: authoritative
+performance_notes: ''
+fits_topics:
+- career
+- leadership
+- management
+- job-hunting
+- networking
+raw_excerpt: 'If you’re job hunting: the job title matters less than who you report
+  to.'
+hook:
+  type: contrarian
+  first_line: 'If you’re job hunting: the job title matters less than who you report
+    to.'
+cta:
+  type: save_this
+  example: ♻️ Repost to remind those who need it

@@ -1,0 +1,21 @@
+framework_id: AUTO_GENERATE
+creator: unknown
+channel: linkedin
+source_file: null
+hook.type: bold_claim
+hook.first_line: If you work more than 8 hours a day.
+structure:
+- presents a specific script/advice for professional use
+- makes a declarative statement about business failure causes (execution vs. ideas)
+- provides a relevant external link
+paragraph_style: short_punchy
+whitespace_use: heavy (line breaks every sentence)
+tone: direct
+cta.type: none
+cta.example: 
+fits_topics: "career", "productivity", "business-strategy", "time-management", "communication"
+performance_notes: ""
+raw_excerpt: |
+- If you work more than 8 hours a day. 
+- You need to memorize this response:
+
