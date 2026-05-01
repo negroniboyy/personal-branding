@@ -1,0 +1,25 @@
+framework_id: AUTO_GENERATE
+creator: unknown
+channel: linkedin
+source_file: linkedin_post_01
+structure:
+- provides a specific script/template for a professional interaction
+- delivers a sharp, authoritative thesis statement about business failure
+- includes a concluding external resource link
+paragraph_style: short_punchy
+whitespace_use: heavy (line breaks every sentence)
+tone: authoritative
+fits_topics:
+- business
+- career
+- productivity
+- communication
+- execution
+performance_notes: ''
+raw_excerpt: If you work more than 8 hours a day.
+hook:
+  type: pain_point
+  first_line: If you work more than 8 hours a day.
+cta:
+  type: none
+  example: ''

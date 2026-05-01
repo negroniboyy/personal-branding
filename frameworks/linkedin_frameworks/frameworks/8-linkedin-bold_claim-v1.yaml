@@ -1,0 +1,30 @@
+framework_id: AUTO_GENERATE
+creator: unknown
+channel: linkedin
+source_file: unknown_source
+structure:
+- sets the stage by referencing industry experts' observations on LLM failures
+- introduces a structured framework solution (4 principles)
+- dedicates one numbered section to outlining a specific principle, including detailed
+  usage instructions
+- repeats the pattern for the remaining principles (2, 3, and 4)
+- explains the practical implementation of the framework
+- provides a concluding 'Aha!' moment about the state of the art in AI coding
+- delivers the call to action (link)
+paragraph_style: short_punchy
+whitespace_use: heavy (line breaks every sentence)
+tone: authoritative
+fits_topics:
+- AI development
+- LLMs
+- coding best practices
+- software architecture
+- agentic workflows
+performance_notes: ''
+raw_excerpt: Claude Code best practices are a game changer for agentic workflows.
+hook:
+  type: bold_claim
+  first_line: Claude Code best practices are a game changer for agentic workflows.
+cta:
+  type: none
+  example: ''

@@ -1,0 +1,30 @@
+framework_id: AUTO_GENERATE
+creator: Nina Devouge
+channel: linkedin
+source_file: linkedin_post
+structure:
+- makes a bold, definitive statement about job hunting priorities.
+- provides a short, supportive quote to back up the premise.
+- generalizes the premise to a broader concept (manager impact vs. role).
+- lists three specific questions/criteria to evaluate a manager.
+- provides actionable advice/pivots for two different audiences (leaders and job seekers).
+- concludes with a final summary sentence.
+paragraph_style: short_punchy
+whitespace_use: heavy (line breaks every sentence)
+tone: authoritative
+performance_notes: null
+fits_topics:
+- career
+- leadership
+- job-hunting
+- manager-skills
+- professional-development
+raw_excerpt: 'If you’re job hunting: the job title matters less than who you report
+  to.'
+hook:
+  type: bold_claim
+  first_line: 'If you’re job hunting: the job title matters less than who you report
+    to.'
+cta:
+  type: save_this
+  example: ♻️ Repost to remind those who need it

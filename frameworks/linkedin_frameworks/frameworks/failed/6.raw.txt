@@ -1,0 +1,25 @@
+framework_id: "AUTO_GENERATE"
+creator: "unknown"
+channel: "linkedin"
+source_file: "linkedin_post"
+hook.type: "bold_claim"
+hook.first_line: "Understanding your customer is the ultimate advantage."
+structure:
+  - states a main premise (the core thesis)
+  - introduces a numbered list structure (teases the list)
+  - includes a promotional P.S. and bulleted list (directing to the webinar)
+  - provides a clear call to action link
+  - adds closing reassurance/secondary CTA
+paragraph_style: "mixed"
+whitespace_use: "heavy (line breaks every sentence)"
+tone: "authoritative"
+cta.type: "soft_sell"
+cta.example: "Register here for free: https://luma.com/qq6bphwo"
+fits_topics:
+  - "customer understanding"
+  - "branding"
+  - "audience definition"
+  - "content pillars"
+  - "webinar"
+performance_notes: ""
+raw_excerpt: "Understanding your customer is the ultimate advantage.\n\nHere are 5 overlooked ways to earn it:\n\nP.S. If you want to go deeper on clarifying your brand and audience, I'm hosting a free live webinar with Jade Bonacolta on May 5th."

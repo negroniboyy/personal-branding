@@ -1,0 +1,30 @@
+framework_id: AUTO_GENERATE
+creator: unknown
+channel: linkedin
+source_file: linkedin_post_analysis
+structure:
+- Makes a bold, general thesis statement.
+- Teases specific, high-value content ("Here are 5 overlooked ways...").
+- Shifts abruptly to a heavily promotional Private Sale (P.S.) webinar pitch.
+- Uses bullet points to list specific learning outcomes (agenda items).
+- Provides a primary, direct call to action (registration link).
+- Offers a secondary, low-friction CTA (signing up for the replay).
+paragraph_style: short_punchy
+whitespace_use: heavy (line breaks every sentence)
+tone: authoritative
+fits_topics:
+- customer
+- marketing
+- branding
+- audience
+- positioning
+performance_notes: ''
+raw_excerpt: Understanding your customer is the ultimate advantage.\n\nHere are 5
+  overlooked ways to earn it:\n\nP.S. If you want to go deeper on clarifying your
+  brand and audience, I'm hosting a free live webinar with Jade Bonacolta on May 5th.
+hook:
+  type: bold_claim
+  first_line: Understanding your customer is the ultimate advantage.
+cta:
+  type: soft_sell
+  example: 'Register here for free: https://luma.com/qq6bphwo'

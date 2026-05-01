@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(uv --version)",
+      "Bash(uv sync *)",
+      "Bash(uv run *)",
+      "Bash(curl -s http://localhost:8001/health)",
+      "Bash(pkill -f \"uvicorn content_api\")",
+      "Bash(curl -s http://localhost:8002/health)",
+      "Bash(pkill -f \"uvicorn diary_service\")",
+      "Bash(python '~/.codex/skills/session-checkpoint/scripts/build_code_memory.py' --repo-root /Users/maxkiyuna/Documents/test_personal_brand --output md/code_memory --mode full)",
+      "Bash(python3 '~/.codex/skills/session-checkpoint/scripts/build_code_memory.py' --repo-root /Users/maxkiyuna/Documents/test_personal_brand --output md/code_memory --mode full)",
+      "Bash(python3 '~/.claude/skills/session-checkpoint/scripts/build_code_memory.py' --repo-root /Users/maxkiyuna/Documents/test_personal_brand --output md --mode changed --no-docs)",
+      "Bash(cat)",
+      "Read(//tmp/**)"
+    ]
+  }
+}

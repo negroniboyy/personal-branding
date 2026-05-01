@@ -1,0 +1,32 @@
+framework_id: AUTO_GENERATE
+creator: unknown
+channel: linkedin
+source_file: 3.txt
+structure:
+- makes an initial comparative statement (lightbulb moment vs. process)
+- identifies a common, structural mistake (Product before Person)
+- uses a cautionary narrative/personal failure to reinforce the mistake
+- pivots and introduces the core framework (Person + Problem = Niche)
+- presents the solution through specific, action-oriented questions
+- provides a definitive closing directive (Focus on the Person first)
+- transitions into a promotional call to action
+paragraph_style: short_punchy
+whitespace_use: heavy (line breaks every sentence)
+tone: authoritative
+performance_notes: ''
+fits_topics:
+- business ideas
+- product development
+- market validation
+- niche
+- entrepreneurship
+raw_excerpt: I used to think coming up with a business idea was like waiting for a
+  lightbulb moment.
+hook:
+  type: contrarian
+  first_line: I used to think coming up with a business idea was like waiting for
+    a lightbulb moment.
+cta:
+  type: soft_sell
+  example: I'm hosting a live Business Ideas Masterclass on 4th May, you can sign
+    up here 👉 https://lnkd.in/gwMiD8rQ

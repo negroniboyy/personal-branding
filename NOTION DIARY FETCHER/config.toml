@@ -1,0 +1,23 @@
+[database]
+path = "data/notion_diary.db"
+
+[sync]
+rate_limit_delay = 0.34
+chunk_size_tokens = 500
+chunk_overlap_chars = 50
+
+[notion]
+page_size = 100
+
+[narrative_warehouse]
+llm_provider = "ollama"
+llm_model = "gemma-32k:latest"
+
+[minimax]
+api_key = ""
+base_url = "https://api.minimax.io"
+model_name = "MiniMax-Text-01"
+
+[ollama]
+base_url = "http://localhost:11434"
+default_model = "gemma-32k:latest"

@@ -1,0 +1,29 @@
+framework_id: AUTO_GENERATE
+creator: unknown
+channel: linkedin
+source_file: post_1
+structure:
+- establishes a limited premise (the "hard part" is psychological, not technical)
+- employs a comparative list structure (limiting belief vs. actionable replacement)
+- identifies and names the pattern (limiting beliefs are excuses)
+- delivers a summarizing thesis statement (choosing action over analysis paralysis)
+- includes a promotional postscript (P.S. with a direct link)
+paragraph_style: short_punchy
+whitespace_use: heavy (line breaks every sentence)
+tone: direct
+performance_notes: ''
+fits_topics:
+- entrepreneurship
+- mindset
+- action-bias
+- lifestyle-business
+- self-improvement
+raw_excerpt: I'm going to keep it short.
+hook:
+  type: bold_claim
+  first_line: I'm going to keep it short.
+cta:
+  type: soft_sell
+  example: P.S. If you're interested in building your own lifestyle business, we've
+    just opened up spaces to join the next cohort starting in May, you can get more
+    information here 👉 https://lnkd.in/gyxRAv5e

@@ -1,0 +1,23 @@
+framework_id: AUTO_GENERATE
+creator: unknown
+channel: linkedin
+source_file: null
+hook.type: bold_claim
+hook.first_line: Being "almost ready" to start a business almost always means you're stuck on one of three things.
+structure:
+  - makes a diagnostic claim (the "stuck on three things" concept)
+  - presents a 3-item framework (The idea, The niche, The offer)
+  - details the common struggle for each item (Idea paralysis, Vague niching, Lack of pricing/offer)
+  - provides a synthesis/reframing (You are only stuck on one thing)
+  - offers a clear solution/next step (A live workshop)
+  - closes with a direct CTA and link
+paragraph_style: mixed
+whitespace_use: heavy (line breaks every sentence)
+tone: authoritative
+cta.type: soft_sell
+cta.example: Sign up here if you fancy joining 👉 https://lnkd.in/eEJcHXe6
+fits_topics: business-strategy, entrepreneurship, product-development, idea-validation, marketing
+performance_notes: ""
+raw_excerpt: Being "almost ready" to start a business almost always means you're stuck on one of three things. 
+
+And the trick is figuring out which one, because the fix is different for each.

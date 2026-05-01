@@ -1,0 +1,8 @@
+{
+  "enabledPlugins": {
+    "marketing-skills@marketingskills": true
+  },
+  "skillOverrides": {
+    "session-checkpoint": "on"
+  }
+}

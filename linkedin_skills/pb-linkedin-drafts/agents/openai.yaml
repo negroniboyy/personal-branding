@@ -1,0 +1,4 @@
+interface:
+  display_name: "pb_linkedin_drafts"
+  short_description: "Draft PersonalBrand LinkedIn posts from brand guides."
+  default_prompt: "Use $pb-linkedin-drafts to read the current brand guide and planning docs, then draft a LinkedIn post in the correct voice."

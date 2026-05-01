@@ -1,0 +1,24 @@
+framework_id: AUTO_GENERATE
+creator: Nina Devouge
+channel: linkedin
+source_file: N/A
+hook.type: bold_claim
+hook.first_line: If you’re job hunting: the job title matters less than who you report to.
+structure:
+  - makes a strong, counter-intuitive claim (job title vs. manager)
+  - presents a core premise (first boss's importance)
+  - reframes the problem (thriving vs. languishing depends on manager)
+  - lists key questions a manager must answer (delegation, advocacy, potential recognition)
+  - provides actionable advice for leaders (ask about opportunities created)
+  - provides specific, sequential action steps for job seekers (negotiate manager, ask about last three reports, assess fit)
+  - concludes with a summarizing statement about the relationship's importance
+paragraph_style: short_punchy
+whitespace_use: heavy (line breaks every sentence)
+tone: authoritative
+cta.type: save_this
+cta.example: ♻️ Repost to remind those who need it
+fits_topics: "job-hunting" "career-development" "management" "leadership" "negotiation"
+performance_notes: 
+raw_excerpt: If you’re job hunting: the job title matters less than who you report to.
+
+“Your first boss is the biggest factor in your career success. A boss who doesn’t trust you won’t give you opportunities to grow.”

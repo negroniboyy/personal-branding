@@ -1,0 +1,27 @@
+# Master schema for LinkedIn content framework extraction
+# Every extracted framework must conform to this shape
+
+framework_id:         # auto-generated: creatorname-channel-hooktype-v1
+creator:              # inferred from filename or "unknown"
+channel: linkedin
+source_file:          # original .txt filename
+
+hook:
+  type:               # bold_claim | question | story_open | stat | pain_point | contrarian
+  first_line:         # exact or paraphrased first line of the post
+
+structure:            # ordered list of content beats
+  - beat:
+    description:
+
+paragraph_style:      # short_punchy | long_form | mixed
+whitespace_use:       # heavy | moderate | minimal
+tone:                 # direct | conversational | authoritative | vulnerable
+
+cta:
+  type:               # question | soft_sell | save_this | follow | none
+  example:
+
+fits_topics:          # list of 3-5 concrete nouns (e.g. productivity, burnout, consistency)
+performance_notes:    # leave blank at extraction time, fill later
+raw_excerpt:          # first 3 lines of the original post, verbatim

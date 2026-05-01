@@ -1,0 +1,31 @@
+framework_id: AUTO_GENERATE
+creator: unknown
+channel: linkedin
+source_file: 4.txt
+structure:
+- makes a bold thesis statement (being stuck on one of three things)
+- elaborates on the necessity of identifying the specific bottleneck (figuring out
+  which one)
+- presents a numbered list/framework detailing the three specific bottlenecks (The
+  idea, The niche, The offer)
+- provides a concluding generalization (only one is the true blocker)
+- offers a direct solution/next step (invites sign-ups for a workshop)
+paragraph_style: short_punchy
+whitespace_use: heavy (line breaks every sentence)
+tone: authoritative
+fits_topics:
+- business-development
+- entrepreneurship
+- product-market-fit
+- business-strategy
+performance_notes: ''
+raw_excerpt: '"Being \"almost ready\" to start a business almost always means you''re
+  stuck on one of three things. \n\nAnd the trick is figuring out which one, because
+  the fix is different for each."'
+hook:
+  type: bold_claim
+  first_line: Being \"almost ready\" to start a business almost always means you're
+    stuck on one of three things.
+cta:
+  type: soft_sell
+  example: Sign up here if you fancy joining 👉 https://lnkd.in/eEJcHXe6
