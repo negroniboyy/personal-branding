@@ -20,6 +20,12 @@ app.add_middleware(
 
 app.include_router(narrative_router)
 
+from content_writer.api_routes import router as content_writer_router
+app.include_router(content_writer_router)
+
+from api.reel_routes import router as reel_router
+app.include_router(reel_router)
+
 DB_PATH = Path(__file__).parent.parent / "data" / "notion_diary.db"
 
 

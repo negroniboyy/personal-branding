@@ -63,3 +63,16 @@ Before spawning sub-agents for parallel tasks:
 5. **Iterate:** If Gemma4 misses items, loop back to step 3 with corrected Blueprint
 
 **CRITICAL:** Do NOT write code yourself. If user says "go", ask: "Should I hand this off to Gemma4, or would you like me to code this milestone?" Always default to Gemma4 handoff unless explicitly told otherwise.
+
+## 📋 7. LOGGER GOVERNANCE
+All Python logging uses `from shared.logger import get_logger` — one call per file, at module top, never inside functions.
+
+**Rules:**
+- Subsystem names: `narrative_warehouse`, `instagram_frameworks`, `linkedin_frameworks`
+- Log files land in `logs/{subsystem}.log` at repo root (`personal_brand/logs/`); auto-purged after 7 days
+- Config in `NOTION DIARY FETCHER/config.toml` under `[logger]` (log_dir, level, retention_days)
+- Never call `logging.basicConfig()` — it conflicts with the shared logger
+- Never use `print(..., file=sys.stderr)` for errors — use `logger.error()` or `logger.warning()`
+- `print()` is acceptable for intentional CLI terminal UX (progress, dry-run prompts, summaries)
+- New subsystem: pick a `snake_case` name, call `get_logger("name")`, add to the list above
+- `shared` package lives at `personal_brand/shared/shared/logger.py`; installed via `uv sync` in `NOTION DIARY FETCHER/`

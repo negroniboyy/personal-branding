@@ -21,3 +21,37 @@ model_name = "MiniMax-Text-01"
 [ollama]
 base_url = "http://localhost:11434"
 default_model = "gemma-32k:latest"
+
+[content_writer]
+ollama_model = "gemma3:latest"
+ollama_host = "http://localhost:11434"
+max_source_chars = 12000
+default_story_limit = 20
+
+[reel_extractor]
+whisper_model        = "base"
+scenedetect_mode     = "adaptive"
+content_threshold    = 20.0
+ollama_model         = "gemma-32k:latest"
+ollama_endpoint      = "http://localhost:11434"
+min_transcript_chars = 20
+
+[reel_extractor.vision]
+enabled            = false
+provider           = "anthropic"
+model              = "claude-sonnet-4-6"
+api_key_env        = "ANTHROPIC_API_KEY"
+frame_sample_count = 6
+frame_strategy     = "scene_midpoints"
+
+[script_writer]
+ollama_model             = "gemma-32k:latest"
+ollama_endpoint          = "http://localhost:11434"
+top_n_stories            = 5
+top_n_frameworks         = 3
+short_reel_threshold_sec = 15
+
+[logger]
+log_dir        = "logs"   # relative to repo root (personal_brand/)
+level          = "INFO"
+retention_days = 7

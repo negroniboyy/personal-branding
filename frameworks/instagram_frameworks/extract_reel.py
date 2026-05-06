@@ -1,0 +1,568 @@
+#!/usr/bin/env python3
+"""
+Extract Instagram Reel frameworks from .mp4 reference files.
+Pipeline: ffprobe → Whisper (timestamped segments) → PySceneDetect → Ollama LLM → YAML + reel_frameworks table.
+"""
+
+import argparse
+import json
+import re
+import shutil
+import sqlite3
+import subprocess
+import sys
+import tempfile
+from datetime import datetime, timezone
+from pathlib import Path
+
+import yaml
+
+import llm_client
+from shared.logger import get_logger
+
+logger = get_logger("instagram_frameworks")
+
+SCRIPT_DIR      = Path(__file__).parent.resolve()
+REFERENCES_DIR  = SCRIPT_DIR / "references"
+PROMPTS_DIR     = SCRIPT_DIR / "prompts"
+FRAMEWORKS_DIR  = SCRIPT_DIR / "frameworks"
+FAILED_DIR      = FRAMEWORKS_DIR / "failed"
+PROMPT_PATH     = PROMPTS_DIR / "extract_reel.txt"
+
+DB_PATH = Path(__file__).parent.parent.parent / "NOTION DIARY FETCHER" / "data" / "notion_diary.db"
+if not DB_PATH.exists():
+    DB_PATH = Path(__file__).parent.parent.parent.parent / "NOTION DIARY FETCHER" / "data" / "notion_diary.db"
+
+HOOK_TYPES   = {"bold_claim", "question", "story_open", "stat", "pain_point", "contrarian"}
+CTA_TYPES    = {"question", "soft_sell", "follow", "save", "none"}
+PACING_TYPES = {"fast", "medium", "slow"}
+
+REQUIRED_FIELDS = [
+    "creator", "source_file", "hook", "structure",
+    "pacing", "tone", "cta", "fits_topics",
+]
+
+
+# ---------------------------------------------------------------------------
+# DB
+# ---------------------------------------------------------------------------
+
+def init_db(conn: sqlite3.Connection) -> None:
+    conn.executescript("""
+        CREATE TABLE IF NOT EXISTS reel_frameworks (
+            id                TEXT PRIMARY KEY,
+            creator           TEXT NOT NULL,
+            channel           TEXT NOT NULL DEFAULT 'instagram_reel',
+            source_file       TEXT NOT NULL,
+            duration_sec      REAL NOT NULL,
+            scene_count       INTEGER NOT NULL,
+            scene_intervals   TEXT NOT NULL,
+            hook_type         TEXT NOT NULL,
+            hook_verbal       TEXT,
+            hook_silence_sec  REAL,
+            structure_json    TEXT NOT NULL,
+            pacing            TEXT NOT NULL,
+            tone              TEXT NOT NULL,
+            cta_type          TEXT NOT NULL,
+            cta_verbal        TEXT,
+            fits_topics       TEXT NOT NULL,
+            transcript_json   TEXT NOT NULL,
+            transcript_text   TEXT NOT NULL,
+            visual_notes      TEXT DEFAULT '',
+            performance_notes TEXT DEFAULT '',
+            yaml_path         TEXT NOT NULL,
+            created_at        TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_rfw_hook_type ON reel_frameworks(hook_type);
+        CREATE INDEX IF NOT EXISTS idx_rfw_creator   ON reel_frameworks(creator);
+        CREATE INDEX IF NOT EXISTS idx_rfw_duration  ON reel_frameworks(duration_sec);
+    """)
+    conn.commit()
+
+
+# ---------------------------------------------------------------------------
+# Pre-processing
+# ---------------------------------------------------------------------------
+
+def get_duration(filepath: Path) -> float:
+    try:
+        result = subprocess.run(
+            ["ffprobe", "-v", "quiet", "-print_format", "json", "-show_format", str(filepath.resolve())],
+            capture_output=True, text=True, check=True,
+        )
+        return float(json.loads(result.stdout)["format"]["duration"])
+    except FileNotFoundError:
+        raise RuntimeError("ffprobe not found — run `brew install ffmpeg`")
+    except subprocess.CalledProcessError as e:
+        stderr = e.stderr.strip() if e.stderr else "(no stderr)"
+        raise RuntimeError(f"ffprobe failed on {filepath.name}: {stderr}")
+
+
+def get_transcript_segments(filepath: Path, model_name: str) -> tuple[list[dict], str]:
+    import whisper
+    model = whisper.load_model(model_name)
+    result = model.transcribe(str(filepath))
+    segments = [
+        {"start": float(s["start"]), "end": float(s["end"]), "text": s["text"].strip()}
+        for s in result.get("segments", [])
+    ]
+    full_text = result.get("text", "").strip()
+    return segments, full_text
+
+
+def get_scene_intervals(filepath: Path, mode: str, threshold: float, duration: float) -> list[tuple[float, float]]:
+    from scenedetect import detect, AdaptiveDetector, ContentDetector
+    if mode == "adaptive":
+        detector = AdaptiveDetector()
+    else:
+        detector = ContentDetector(threshold=threshold)
+    scene_list = detect(str(filepath), detector)
+    if not scene_list:
+        return [(0.0, duration)]
+    return [(s[0].get_seconds(), s[1].get_seconds()) for s in scene_list]
+
+
+def compute_hook_silence(segments: list[dict]) -> float:
+    if not segments:
+        return 0.0
+    return round(segments[0]["start"], 3)
+
+
+# ---------------------------------------------------------------------------
+# Context block for LLM
+# ---------------------------------------------------------------------------
+
+def build_context_block(
+    duration: float,
+    scene_intervals: list[tuple[float, float]],
+    segments: list[dict],
+    hook_silence: float,
+) -> str:
+    scenes_fmt = ", ".join(f"({s:.2f}, {e:.2f})" for s, e in scene_intervals)
+    lines = [
+        f"DURATION: {duration:.2f}s",
+        f"SCENES: [{scenes_fmt}]",
+        f"HOOK_SILENCE_SEC: {hook_silence:.2f}",
+        "TIMESTAMPED_TRANSCRIPT:",
+    ]
+    for seg in segments:
+        lines.append(f'  [{seg["start"]:.2f}–{seg["end"]:.2f}] "{seg["text"]}"')
+    if not segments:
+        lines.append("  (no speech detected)")
+    return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
+# YAML parsing (mirrors linkedin_frameworks pattern)
+# ---------------------------------------------------------------------------
+
+_PRE_EXTRACT_PATTERN = re.compile(
+    r'^(hook\.type|hook\.first_line|cta\.type|cta\.verbal|fits_topics)\s*:[ \t]*(.*)',
+    re.MULTILINE,
+)
+
+
+def parse_yaml_with_fallback(raw: str) -> dict | None:
+    text = raw.strip()
+    if not text:
+        return None
+
+    text = text.lstrip("```yaml").lstrip("```").strip()
+    text = text.removesuffix("```").strip()
+
+    raw_excerpt_value = None
+    if "\nraw_excerpt:" in text:
+        idx = text.find("\nraw_excerpt:")
+        after_key = text[idx + len("\nraw_excerpt:"):]
+        stripped_after = after_key.lstrip(" \t")
+        if stripped_after.startswith(("|", ">")):
+            for line in after_key.split("\n")[1:]:
+                stripped = line.strip()
+                if stripped:
+                    raw_excerpt_value = stripped.lstrip("- ").strip()
+                    break
+        else:
+            raw_excerpt_value = after_key.split("\n")[0].strip()
+        text = text[:idx].rstrip()
+
+    pre_extracted: dict[str, str] = {}
+
+    def _capture(m: re.Match) -> str:
+        value = m.group(2).strip()
+        if value:
+            pre_extracted[m.group(1)] = value
+            return ""
+        return m.group(0)
+
+    text = _PRE_EXTRACT_PATTERN.sub(_capture, text)
+
+    try:
+        data = yaml.safe_load(text)
+    except yaml.YAMLError:
+        return None
+
+    if not isinstance(data, dict):
+        return None
+
+    for key, value in pre_extracted.items():
+        if key not in data or data[key] is None:
+            data[key] = value
+
+    if raw_excerpt_value is not None:
+        data["raw_excerpt"] = raw_excerpt_value
+
+    return data
+
+
+def _unquote(value: str | None) -> str | None:
+    if not value:
+        return value
+    v = value.strip()
+    if len(v) >= 2 and v[0] == v[-1] and v[0] in ('"', "'"):
+        return v[1:-1]
+    return v
+
+
+def normalize_nested_fields(data: dict) -> None:
+    hook_type       = _unquote(data.pop("hook.type", None))
+    hook_first_line = _unquote(data.pop("hook.first_line", None))
+    existing_hook   = data.get("hook")
+    if isinstance(existing_hook, dict):
+        if hook_type and "type" not in existing_hook:
+            existing_hook["type"] = hook_type
+        if hook_first_line and "first_line" not in existing_hook:
+            existing_hook["first_line"] = hook_first_line
+    elif hook_type or hook_first_line:
+        data["hook"] = {"type": hook_type or "", "first_line": hook_first_line or ""}
+
+    cta_type   = _unquote(data.pop("cta.type", None))
+    cta_verbal = _unquote(data.pop("cta.verbal", None))
+    existing_cta = data.get("cta")
+    if isinstance(existing_cta, dict):
+        if cta_type and "type" not in existing_cta:
+            existing_cta["type"] = cta_type
+        if cta_verbal and "verbal" not in existing_cta:
+            existing_cta["verbal"] = cta_verbal
+    elif cta_type or cta_verbal:
+        data["cta"] = {"type": cta_type or "", "verbal": cta_verbal or ""}
+
+
+def normalize_fits_topics(data: dict) -> None:
+    if "fits_topics" in data and isinstance(data["fits_topics"], str):
+        val = data["fits_topics"].strip().strip("[]")
+        if "," in val:
+            topics = [t.strip().strip('"').strip("'") for t in val.split(",")]
+        else:
+            tokens = re.findall(r'"([^"]+)"|\'([^\']+)\'|(\S+)', val)
+            topics = [t[0] or t[1] or t[2] for t in tokens]
+        data["fits_topics"] = [t for t in topics if t]
+
+
+def normalize_source_file(data: dict, fallback: str) -> None:
+    sf = data.get("source_file", "")
+    if isinstance(sf, list):
+        sf = sf[0] if sf else ""
+    sf = str(sf).strip() if sf else ""
+    if not sf or sf in ("null", "None", "unknown", "N/A"):
+        data["source_file"] = fallback
+    else:
+        data["source_file"] = sf
+
+
+# ---------------------------------------------------------------------------
+# Validation
+# ---------------------------------------------------------------------------
+
+def validate(data: dict) -> list[str]:
+    missing = []
+    for field in REQUIRED_FIELDS:
+        if field not in data or data[field] is None or data[field] == "":
+            missing.append(field)
+    hook = data.get("hook")
+    if isinstance(hook, dict):
+        if not hook.get("type"):
+            missing.append("hook.type")
+        elif hook["type"] not in HOOK_TYPES:
+            missing.append(f"hook.type invalid ({hook['type']})")
+        if not hook.get("first_line"):
+            missing.append("hook.first_line")
+    cta = data.get("cta")
+    if isinstance(cta, dict):
+        if not cta.get("type") or cta["type"] not in CTA_TYPES:
+            missing.append("cta.type")
+    pacing = data.get("pacing", "")
+    if pacing not in PACING_TYPES:
+        missing.append(f"pacing invalid ({pacing!r})")
+    fits = data.get("fits_topics")
+    if not isinstance(fits, list) or len(fits) < 1:
+        missing.append("fits_topics (must be non-empty list)")
+    structure = data.get("structure")
+    if not isinstance(structure, list) or len(structure) < 1:
+        missing.append("structure (must be non-empty list)")
+    return missing
+
+
+# ---------------------------------------------------------------------------
+# ID / persistence
+# ---------------------------------------------------------------------------
+
+def generate_framework_id(source_file: str, hook_type: str) -> str:
+    stem = Path(source_file).stem.lower().replace(" ", "-")
+    return f"{stem}-instagram-{hook_type}-v1"
+
+
+def save_yaml(framework_id: str, data: dict) -> Path:
+    FRAMEWORKS_DIR.mkdir(parents=True, exist_ok=True)
+    path = FRAMEWORKS_DIR / f"{framework_id}.yaml"
+    with open(path, "w", encoding="utf-8") as f:
+        yaml.safe_dump(data, f, sort_keys=False, allow_unicode=True)
+    return path
+
+
+def insert_db_row(
+    conn: sqlite3.Connection,
+    framework_id: str,
+    data: dict,
+    segments: list[dict],
+    full_text: str,
+    scene_intervals: list[tuple[float, float]],
+    duration: float,
+    hook_silence: float,
+    yaml_path: Path,
+) -> bool:
+    def _s(v) -> str:
+        if v is None:
+            return ""
+        if isinstance(v, (list, dict)):
+            return json.dumps(v)
+        return str(v)
+
+    hook = data.get("hook", {}) or {}
+    cta  = data.get("cta", {}) or {}
+    now  = datetime.now(timezone.utc).isoformat()
+
+    try:
+        conn.execute("""
+            INSERT OR REPLACE INTO reel_frameworks (
+                id, creator, channel, source_file,
+                duration_sec, scene_count, scene_intervals,
+                hook_type, hook_verbal, hook_silence_sec,
+                structure_json, pacing, tone,
+                cta_type, cta_verbal, fits_topics,
+                transcript_json, transcript_text,
+                visual_notes, performance_notes,
+                yaml_path, created_at
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        """, (
+            framework_id,
+            _s(data.get("creator", "unknown")),
+            "instagram_reel",
+            _s(data.get("source_file", "")),
+            duration,
+            len(scene_intervals),
+            json.dumps([[s, e] for s, e in scene_intervals]),
+            _s(hook.get("type", "")),
+            _s(hook.get("first_line", "")),
+            hook_silence,
+            json.dumps(data.get("structure", [])),
+            _s(data.get("pacing", "")),
+            _s(data.get("tone", "")),
+            _s(cta.get("type", "")),
+            _s(cta.get("verbal", "")),
+            json.dumps(data.get("fits_topics", [])),
+            json.dumps(segments),
+            full_text,
+            "",
+            _s(data.get("performance_notes", "")),
+            str(yaml_path),
+            now,
+        ))
+        conn.commit()
+        return True
+    except Exception as e:
+        logger.warning("DB insert failed for %s: %s", framework_id, e)
+        return False
+
+
+# ---------------------------------------------------------------------------
+# Per-file processing
+# ---------------------------------------------------------------------------
+
+def _write_failed(stem: str, context_block: str, raw_llm: str) -> None:
+    FAILED_DIR.mkdir(parents=True, exist_ok=True)
+    path = FAILED_DIR / f"{stem}.failed.txt"
+    path.write_text(
+        f"=== PRE-LLM CONTEXT ===\n{context_block}\n\n=== RAW LLM OUTPUT ===\n{raw_llm}",
+        encoding="utf-8",
+    )
+
+
+def process_file(
+    filepath: Path,
+    cfg: dict,
+    prompt_template: str,
+    conn: sqlite3.Connection,
+) -> tuple[str, str]:
+    stem = filepath.stem
+
+    if not filepath.exists():
+        return filepath.name, f"FAILED: file not found at {filepath.resolve()}"
+
+    try:
+        duration = get_duration(filepath)
+    except RuntimeError as e:
+        _write_failed(stem, f"filepath: {filepath.resolve()}", str(e))
+        return filepath.name, f"FAILED: {e}"
+
+    segments, full_text = get_transcript_segments(filepath, cfg["whisper_model"])
+    if len(full_text.strip()) < cfg["min_transcript_chars"]:
+        _write_failed(stem, f"DURATION: {duration:.2f}s\n(transcript too short)", full_text)
+        return filepath.name, f"FAILED: transcript too short ({len(full_text.strip())} chars)"
+
+    scene_intervals = get_scene_intervals(
+        filepath, cfg["scenedetect_mode"], cfg["content_threshold"], duration
+    )
+    hook_silence = compute_hook_silence(segments)
+    ctx = build_context_block(duration, scene_intervals, segments, hook_silence)
+
+    prompt = llm_client.inject(prompt_template, REEL_CONTEXT=ctx)
+    raw = llm_client.complete(prompt, section="reel_extractor")
+
+    data = parse_yaml_with_fallback(raw)
+    if data is None:
+        _write_failed(stem, ctx, raw)
+        return filepath.name, "FAILED: unparseable YAML"
+
+    normalize_fits_topics(data)
+    normalize_source_file(data, filepath.name)
+    normalize_nested_fields(data)
+
+    missing = validate(data)
+    if missing:
+        _write_failed(stem, ctx, raw)
+        return filepath.name, f"FAILED: missing fields: {', '.join(missing)}"
+
+    hook_type    = (data.get("hook") or {}).get("type", "unknown")
+    framework_id = generate_framework_id(filepath.name, hook_type)
+    yaml_path    = save_yaml(framework_id, data)
+    db_ok        = insert_db_row(conn, framework_id, data, segments, full_text,
+                                  scene_intervals, duration, hook_silence, yaml_path)
+
+    status = "OK" if db_ok else "OK (DB insert warning)"
+    return framework_id, status
+
+
+# ---------------------------------------------------------------------------
+# v2 vision hooks (inert in v1.1)
+# ---------------------------------------------------------------------------
+
+def sample_frames(
+    filepath: Path,
+    scene_intervals: list[tuple[float, float]],
+    count: int,
+    strategy: str,
+) -> list[Path]:
+    raise NotImplementedError("sample_frames is a v2 feature — enable vision in config.toml first")
+
+
+def populate_visual_notes_v2(
+    framework_id: str,
+    frame_paths: list[Path],
+    cfg: dict,
+    conn: sqlite3.Connection,
+) -> None:
+    raise NotImplementedError("populate_visual_notes_v2 is a v2 feature — enable vision in config.toml first")
+
+
+# ---------------------------------------------------------------------------
+# Runner
+# ---------------------------------------------------------------------------
+
+def run_extraction(cfg: dict, single_file: Path | None, dry_run: bool) -> None:
+    prompt_template = PROMPT_PATH.read_text(encoding="utf-8")
+
+    if dry_run:
+        ctx = None
+        target = single_file or next((p for p in REFERENCES_DIR.iterdir() if p.suffix.lower() == ".mp4"), None)
+        if target and target.exists():
+            try:
+                duration = get_duration(target)
+                segments, full_text = get_transcript_segments(target, cfg["whisper_model"])
+                scene_intervals = get_scene_intervals(
+                    target, cfg["scenedetect_mode"], cfg["content_threshold"], duration
+                )
+                hook_silence = compute_hook_silence(segments)
+                ctx = build_context_block(duration, scene_intervals, segments, hook_silence)
+            except Exception as e:
+                print(f"[dry-run] Could not process {target.name}: {e} — using synthetic context", file=sys.stderr)
+        if ctx is None:
+            ctx = (
+                "DURATION: 12.34s\n"
+                "SCENES: [(0.00, 3.20), (3.20, 8.90), (8.90, 12.34)]\n"
+                "HOOK_SILENCE_SEC: 0.80\n"
+                "TIMESTAMPED_TRANSCRIPT:\n"
+                '  [0.80–3.20] "Stop scrolling. This is the thing nobody tells you."\n'
+                '  [3.20–8.90] "I spent three years figuring this out the hard way..."\n'
+                '  [8.90–12.34] "Save this. You will need it."'
+            )
+        prompt = llm_client.inject(prompt_template, REEL_CONTEXT=ctx)
+        print(prompt)
+        sys.exit(0)
+
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    init_db(conn)
+
+    def _find_mp4s(directory: Path) -> list[Path]:
+        return sorted(p for p in directory.iterdir() if p.suffix.lower() == ".mp4")
+
+    files = [single_file] if single_file else _find_mp4s(REFERENCES_DIR)
+    if not files:
+        logger.error("No .mp4 files found in %s", REFERENCES_DIR)
+        conn.close()
+        sys.exit(1)
+
+    results = []
+    for filepath in files:
+        print(f"  Processing {filepath.name} ...", end=" ", flush=True)
+        framework_id, status = process_file(filepath, cfg, prompt_template, conn)
+        marker = "OK" if status.startswith("OK") else "FAILED"
+        print(f"→ {framework_id} [{marker}]")
+        results.append((filepath.name, framework_id, status))
+
+    conn.close()
+
+    succeeded = sum(1 for _, _, s in results if s.startswith("OK"))
+    failed    = sum(1 for _, _, s in results if s.startswith("FAILED"))
+    print(f"\nSummary: {len(results)} processed | {succeeded} OK | {failed} failed")
+    if failed:
+        print("\nFailed:")
+        for name, _, status in results:
+            if status.startswith("FAILED"):
+                print(f"  {name}: {status}")
+
+    sys.exit(0 if failed == 0 else 1)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Extract Instagram Reel frameworks")
+    parser.add_argument("--whisper-model", default=None,
+                        help="Override whisper model (tiny|base|small|medium|large)")
+    parser.add_argument("--file", type=Path, default=None,
+                        help="Process a single .mp4 instead of all in references/")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="Print assembled prompt; no Ollama, no DB writes")
+    parser.add_argument("--with-vision", action="store_true",
+                        help="(v1.1: disabled) Vision pass via cloud LLM")
+    args = parser.parse_args()
+
+    if args.with_vision:
+        print("--with-vision is disabled in v1.1 — set [reel_extractor.vision] enabled=true in config.toml")
+        sys.exit(0)
+
+    cfg = llm_client.load_config("reel_extractor")
+    if args.whisper_model:
+        cfg["whisper_model"] = args.whisper_model
+
+    single_file = args.file.resolve() if args.file else None
+    run_extraction(cfg, single_file, args.dry_run)

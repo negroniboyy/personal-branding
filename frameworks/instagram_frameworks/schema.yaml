@@ -1,0 +1,36 @@
+# Master schema for Instagram Reel framework extraction
+# Documentation only — not imported by any module
+
+framework_id:         # auto-generated: {stem}-instagram-{hook_type}-v1
+creator:              # inferred from transcript or "unknown"
+channel: instagram_reel
+source_file:          # original .mp4 filename
+
+hook:
+  type:               # bold_claim | question | story_open | stat | pain_point | contrarian
+  first_line:         # first spoken sentence from the reel transcript
+
+structure:            # ordered list of content beats with timestamps
+  - beat:             # short label: hook | conflict_build | insight | payoff | cta
+    start_sec:        # float — from transcript timestamps
+    end_sec:          # float — from transcript timestamps
+    description:      # verbal description of what is said in this segment
+
+pacing:               # fast (cuts/s > 0.4) | medium | slow (cuts/s < 0.15)
+tone:                 # direct | conversational | authoritative | vulnerable
+
+cta:
+  type:               # question | soft_sell | follow | save | none
+  verbal:             # exact CTA text from transcript
+
+fits_topics:          # list of 3-5 concrete nouns (e.g. productivity, burnout, consistency)
+performance_notes:    # leave blank at extraction time; fill later
+
+# DB-only fields (not in YAML output):
+#   duration_sec      — from ffprobe
+#   scene_count       — from PySceneDetect
+#   scene_intervals   — JSON [[start, end], ...] in seconds
+#   hook_silence_sec  — segments[0].start; proxy for visual-hook opening
+#   transcript_json   — [{start, end, text}, ...] from Whisper segments
+#   transcript_text   — flattened plain text
+#   visual_notes      — user-managed; LLM never writes here; fill manually or via --with-vision (v2)

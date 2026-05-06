@@ -3,6 +3,8 @@ import PageList from "./components/PageList.jsx"
 import PageDetail from "./components/PageDetail.jsx"
 import NarrativeDashboard from "./components/NarrativeDashboard.jsx"
 import StoryNodeList from "./components/StoryNodeList.jsx"
+import ContentWriter from "./components/ContentWriter.jsx"
+import ReelWriter from "./components/ReelWriter.jsx"
 
 export default function App() {
   const [tab, setTab] = useState("diary")
@@ -19,6 +21,12 @@ export default function App() {
         <TabButton active={tab === "narrative"} onClick={() => setTab("narrative")}>
           Narrative Warehouse
         </TabButton>
+        <TabButton active={tab === "writer"} onClick={() => setTab("writer")}>
+          Content Writer
+        </TabButton>
+        <TabButton active={tab === "reels"} onClick={() => setTab("reels")}>
+          Reels
+        </TabButton>
       </div>
 
       {tab === "diary" && (
@@ -28,6 +36,10 @@ export default function App() {
           <PageDetail pageId={selectedPageId} onBack={() => setSelectedPageId(null)} />
         )
       )}
+
+      {tab === "writer" && <ContentWriter />}
+
+      {tab === "reels" && <ReelWriter />}
 
       {tab === "narrative" && (
         <div>

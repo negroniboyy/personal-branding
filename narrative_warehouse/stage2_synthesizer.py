@@ -3,8 +3,11 @@ import json
 import uuid
 from datetime import datetime, timezone, timedelta
 
+from shared.logger import get_logger
 from .db import get_db, run_migrations
 from .normalizer import normalize_conflict_node, display_name_from_conflict_node
+
+logger = get_logger("narrative_warehouse")
 
 
 def get_week_bounds(week_start: str | None = None) -> tuple[str, str]:
@@ -177,4 +180,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     result = run_synthesis(args.week_start)
+    logger.info("synthesis complete: %s", json.dumps(result))
     print(json.dumps(result, indent=2))

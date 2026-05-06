@@ -5,6 +5,9 @@ Routes to Ollama local by default; other tiers are placeholders.
 
 import sys
 import httpx
+from shared.logger import get_logger
+
+logger = get_logger("linkedin_frameworks")
 
 TIER_CONFIG = {
     "local": {
@@ -71,10 +74,10 @@ def _ollama_complete(prompt: str, model: str, endpoint: str) -> str:
             data = resp.json()
             return data["message"]["content"]
     except httpx.ConnectError:
-        print("Ollama not running — start with `ollama serve`", file=sys.stderr)
+        logger.error("Ollama not running — start with `ollama serve`")
         sys.exit(1)
     except httpx.TimeoutException:
-        print("Ollama timed out — model may be loading, try again or increase timeout", file=sys.stderr)
+        logger.error("Ollama timed out — model may be loading, try again or increase timeout")
         sys.exit(1)
 
 

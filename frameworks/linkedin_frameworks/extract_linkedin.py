@@ -15,6 +15,9 @@ from pathlib import Path
 import yaml
 
 from llm_client import complete, set_prompt_template_path, inject_post_text
+from shared.logger import get_logger
+
+logger = get_logger("linkedin_frameworks")
 
 # Resolve paths relative to this script's location
 SCRIPT_DIR = Path(__file__).parent.resolve()
@@ -307,7 +310,7 @@ def insert_db_row(framework_id: str, data: dict, yaml_path: Path) -> bool:
         conn.commit()
         return True
     except Exception as e:
-        print(f"  [DB WARNING] insert failed: {e}", file=sys.stderr)
+        logger.warning("DB insert failed for %s: %s", framework_id, e)
         return False
     finally:
         conn.close()
@@ -365,7 +368,7 @@ def run_extraction(dry_run: bool):
 
     txt_files = sorted(REFERENCES_DIR.glob("*.txt"))
     if not txt_files:
-        print(f"No .txt files found in {REFERENCES_DIR}", file=sys.stderr)
+        logger.error("No .txt files found in %s", REFERENCES_DIR)
         sys.exit(1)
 
     results = []
