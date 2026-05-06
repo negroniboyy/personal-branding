@@ -4,9 +4,12 @@ import time
 import uuid
 from datetime import datetime, timezone
 
+from shared.logger import get_logger
 from .config import NarrativeWarehouseConfig, get_llm_provider_override, get_llm_model_override
 from .db import get_db, run_migrations
 from .llm_client import make_llm_client
+
+logger = get_logger("narrative_warehouse")
 
 
 def build_diary_text(conn, page_id: str) -> str:
@@ -79,6 +82,7 @@ def run_extraction(provider: str | None = None, model: str | None = None) -> dic
                 low_potential_count += 1
 
         except Exception as e:
+            logger.error("Page %s extraction failed: %s", page_id, e)
             errors.append(f"Page {page_id}: {str(e)}")
 
     conn.close()
@@ -102,4 +106,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     result = run_extraction(args.provider, args.model)
+    logger.info("extraction complete: %s", json.dumps(result))
     print(json.dumps(result, indent=2))

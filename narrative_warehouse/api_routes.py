@@ -8,10 +8,13 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
+from shared.logger import get_logger
 
 from .stage1_extractor import run_extraction
 from .stage2_synthesizer import run_synthesis
 from .db import get_db
+
+logger = get_logger("narrative_warehouse")
 
 router = APIRouter(prefix="/narrative", tags=["narrative"])
 
@@ -39,16 +42,21 @@ class UpdateStoryNodeRequest(BaseModel):
 def extract(req: ExtractRequest = None) -> dict[str, Any]:
     provider = req.provider if req else None
     model = req.model if req else None
+    logger.info("extract requested provider=%s model=%s", provider, model)
     result = run_extraction(provider=provider, model=model)
     if result.get("errors") and result["pages_processed"] == 0:
+        logger.error("extract failed: %s", result["errors"])
         raise HTTPException(status_code=500, detail=result["errors"])
+    logger.info("extract done: %d pages, %d nodes", result.get("pages_processed", 0), result.get("story_nodes_created", 0))
     return result
 
 
 @router.post("/synthesize")
 def synthesize(req: SynthesizeRequest = None) -> dict[str, Any]:
     week_start = req.week_start if req else None
+    logger.info("synthesize requested week_start=%s", week_start)
     result = run_synthesis(week_start=week_start)
+    logger.info("synthesize done: %s", result.get("week_index_id"))
     return result
 
 

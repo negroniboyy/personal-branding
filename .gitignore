@@ -24,3 +24,6 @@ dist/
 
 # Logs
 *.log
+frameworks/instagram_frameworks/references/*.mp4
+frameworks/instagram_frameworks/references/*.MP4
+logs/

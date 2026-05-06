@@ -5,6 +5,10 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Literal
 
+from shared.logger import get_logger
+
+logger = get_logger("narrative_warehouse")
+
 SYSTEM_PROMPT = """You are a narrative analyst. Given a person's diary entry, extract 4 story variables and assign thematic tags.
 
 OUTPUT: Return ONLY valid JSON, no markdown, no explanation.
@@ -88,6 +92,7 @@ class MinimaxCloudClient(LLMClient):
         try:
             obj = json.loads(text)
         except json.JSONDecodeError:
+            logger.warning("JSON parse failed on raw LLM output, retrying after markdown strip")
             text = re.sub(r"^```json\s*", "", text.strip())
             text = re.sub(r"\s*```$", "", text.strip())
             obj = json.loads(text)
@@ -133,6 +138,7 @@ class OllamaClient(LLMClient):
         try:
             obj = json.loads(text)
         except json.JSONDecodeError:
+            logger.warning("JSON parse failed on raw LLM output, retrying after markdown strip")
             text = re.sub(r"^```json\s*", "", text.strip())
             text = re.sub(r"\s*```$", "", text.strip())
             obj = json.loads(text)
