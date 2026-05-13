@@ -4,7 +4,7 @@ from typing import Optional
 
 @dataclass
 class StoryNode:
-    id: int
+    id: str
     title: str
     user_state: str
     conflict_node: str
@@ -17,7 +17,7 @@ class StoryNode:
 
 @dataclass
 class Framework:
-    id: int
+    id: str
     name: str
     hook_type: str
     tone: str

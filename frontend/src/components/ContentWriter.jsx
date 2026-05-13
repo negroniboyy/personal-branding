@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import {
   fetchFrameworks,
   postRecommendations,
@@ -6,6 +7,9 @@ import {
   fetchDrafts,
   fetchDraft,
 } from "../contentWriterApi.js"
+import GlassPanel from "./ui/GlassPanel.jsx"
+import PrimaryButton from "./ui/PrimaryButton.jsx"
+import Icon from "./ui/Icon.jsx"
 
 export default function ContentWriter() {
   const [stories, setStories] = useState([])
@@ -18,6 +22,7 @@ export default function ContentWriter() {
   const [activeDraft, setActiveDraft] = useState(null)
   const [generating, setGenerating] = useState(false)
   const [loadingRecs, setLoadingRecs] = useState(false)
+  const [copied, setCopied] = useState(false)
   const [error, setError] = useState(null)
 
   const loadRecommendations = useCallback(async (idea) => {
@@ -40,16 +45,10 @@ export default function ContentWriter() {
   }, [manualOverride])
 
   const loadDrafts = async () => {
-    try {
-      const data = await fetchDrafts()
-      setDrafts(data)
-    } catch { /* non-blocking */ }
+    try { setDrafts(await fetchDrafts()) } catch { /* non-blocking */ }
   }
 
-  useEffect(() => {
-    loadRecommendations("")
-    loadDrafts()
-  }, [])
+  useEffect(() => { loadRecommendations(""); loadDrafts() }, [])
 
   const handleGenerate = async () => {
     if (!selectedStoryId || !selectedFrameworkId) return
@@ -72,159 +71,218 @@ export default function ContentWriter() {
   }
 
   const handleSelectDraft = async (id) => {
-    try {
-      const d = await fetchDraft(id)
-      setActiveDraft(d)
-    } catch (e) {
-      setError(e.message)
-    }
+    try { setActiveDraft(await fetchDraft(id)) } catch (e) { setError(e.message) }
+  }
+
+  const handleCopy = () => {
+    if (!activeDraft?.generated_text) return
+    navigator.clipboard.writeText(activeDraft.generated_text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
   const selectedStory = stories.find(s => s.id === selectedStoryId)
   const selectedFramework = frameworks.find(f => f.id === selectedFrameworkId)
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 24 }}>
+    <div className="flex flex-col gap-8 relative">
+      {/* Decorative glow blob */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-gradient-to-r from-indigo-500/5 to-violet-500/5 blur-[100px] z-0 pointer-events-none" />
 
-      {/* LEFT PANEL */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-
-        {/* Idea prompt */}
-        <div>
-          <label style={labelStyle}>Idea / framing hint (optional)</label>
+      {/* --- Input section --- */}
+      <section className="relative z-10 flex flex-col gap-4">
+        {/* Idea hint */}
+        <GlassPanel className="rounded-xl p-card_padding">
+          <label className="font-label-caps text-label-caps text-on-surface-variant block mb-3">IDEA HINT</label>
           <textarea
             value={ideaPrompt}
             onChange={e => setIdeaPrompt(e.target.value)}
-            placeholder="e.g. overcoming imposter syndrome in your 30s"
-            rows={3}
-            style={{ ...inputStyle, resize: "vertical" }}
+            placeholder="Type your content kernel here..."
+            rows={4}
+            className="w-full bg-white/40 border border-black/5 rounded-lg p-4 font-mono-script text-mono-script text-on-surface focus:ring-1 focus:ring-primary focus:border-primary outline-none resize-none transition-all placeholder:text-outline-variant"
           />
-          <button
+        </GlassPanel>
+
+        {/* Story + Framework pickers */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="flex flex-col gap-2">
+            <label className="font-label-caps text-label-caps text-on-surface-variant">STORY</label>
+            <select
+              value={selectedStoryId ?? ""}
+              onChange={e => { setSelectedStoryId(e.target.value); setManualOverride(true) }}
+              className="glass-panel rounded-lg px-4 py-3 font-body text-body text-on-surface appearance-none focus:border-primary outline-none border-black/5"
+            >
+              {stories.length === 0 && <option value="">No stories loaded</option>}
+              {stories.map(s => (
+                <option key={s.id} value={s.id}>
+                  {(s.title || s.conflict_node || s.id).replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase())}
+                </option>
+              ))}
+            </select>
+            {selectedStory && (
+              <p className="font-label-caps text-[10px] text-on-surface-variant px-1">{selectedStory.conflict_node}</p>
+            )}
+          </div>
+          <div className="flex flex-col gap-2">
+            <label className="font-label-caps text-label-caps text-on-surface-variant">FRAMEWORK</label>
+            <select
+              value={selectedFrameworkId ?? ""}
+              onChange={e => { setSelectedFrameworkId(Number(e.target.value)); setManualOverride(true) }}
+              className="glass-panel rounded-lg px-4 py-3 font-body text-body text-on-surface appearance-none focus:border-primary outline-none border-black/5"
+            >
+              {frameworks.length === 0 && <option value="">No frameworks loaded</option>}
+              {frameworks.map(f => (
+                <option key={f.id} value={f.id}>
+                  {[f.hook_type, f.tone, f.cta].filter(Boolean).map(s =>
+                    s.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())
+                  ).join(" · ")}
+                </option>
+              ))}
+            </select>
+            {selectedFramework && (
+              <p className="font-label-caps text-[10px] text-on-surface-variant px-1">{selectedFramework.hook_type} · {selectedFramework.tone}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Actions row */}
+        <div className="flex gap-3 flex-wrap">
+          <motion.button
             onClick={() => loadRecommendations(ideaPrompt)}
             disabled={loadingRecs}
-            style={secondaryBtnStyle}
+            whileTap={{ scale: 0.98 }}
+            className="flex-1 glass-panel text-primary py-3 px-5 rounded-xl font-label-caps text-label-caps flex items-center justify-center gap-2 hover:bg-white transition-colors border-primary/20 disabled:opacity-40"
           >
-            {loadingRecs ? "Loading…" : "Get Recommendations"}
-          </button>
+            <Icon name={loadingRecs ? "sync" : "auto_awesome"} size={16} />
+            {loadingRecs ? "Loading..." : "Get Recommendations"}
+          </motion.button>
+          <PrimaryButton
+            onClick={handleGenerate}
+            disabled={generating || !selectedStoryId || !selectedFrameworkId}
+            icon={generating ? "hourglass_top" : "temp_preferences_custom"}
+            className="flex-1"
+          >
+            {generating ? "Generating..." : "Generate Draft"}
+          </PrimaryButton>
         </div>
 
-        {/* Story picker */}
-        <div>
-          <label style={labelStyle}>Story</label>
-          <select
-            value={selectedStoryId ?? ""}
-            onChange={e => { setSelectedStoryId(Number(e.target.value)); setManualOverride(true) }}
-            style={inputStyle}
-          >
-            {stories.length === 0 && <option value="">No stories loaded</option>}
-            {stories.map(s => (
-              <option key={s.id} value={s.id}>
-                [{s.worth_score?.toFixed(1)}] {s.title || `#${s.id}`}
-              </option>
-            ))}
-          </select>
-          {selectedStory && (
-            <p style={metaStyle}>{selectedStory.conflict_node}</p>
-          )}
-        </div>
-
-        {/* Framework picker */}
-        <div>
-          <label style={labelStyle}>Framework</label>
-          <select
-            value={selectedFrameworkId ?? ""}
-            onChange={e => { setSelectedFrameworkId(Number(e.target.value)); setManualOverride(true) }}
-            style={inputStyle}
-          >
-            {frameworks.length === 0 && <option value="">No frameworks loaded</option>}
-            {frameworks.map(f => (
-              <option key={f.id} value={f.id}>{f.name}</option>
-            ))}
-          </select>
-          {selectedFramework && (
-            <p style={metaStyle}>{selectedFramework.hook_type} · {selectedFramework.tone}</p>
-          )}
-        </div>
-
-        {/* Generate */}
-        <button
-          onClick={handleGenerate}
-          disabled={generating || !selectedStoryId || !selectedFrameworkId}
-          style={primaryBtnStyle}
-        >
-          {generating ? "Generating…" : "Generate Draft"}
-        </button>
-
-        {error && <p style={{ color: "#c62828", fontSize: 13 }}>{error}</p>}
-
-        {/* Recent drafts */}
-        {drafts.length > 0 && (
-          <div>
-            <p style={{ ...labelStyle, marginBottom: 6 }}>Recent drafts</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              {drafts.map(d => (
-                <button
-                  key={d.id}
-                  onClick={() => handleSelectDraft(d.id)}
-                  style={{
-                    textAlign: "left",
-                    background: activeDraft?.id === d.id ? "#e3f2fd" : "#f5f5f5",
-                    border: "none",
-                    borderRadius: 6,
-                    padding: "6px 10px",
-                    cursor: "pointer",
-                    fontSize: 12,
-                    color: "#333",
-                  }}
-                >
-                  #{d.id} · {d.model_used} · {d.created_at?.slice(0, 16)}
-                </button>
-              ))}
-            </div>
+        {error && (
+          <div className="flex items-center gap-2 text-error font-label-caps text-label-caps">
+            <Icon name="error" size={14} /> {error}
           </div>
         )}
-      </div>
+      </section>
 
-      {/* RIGHT PANEL */}
-      <div>
-        {activeDraft ? (
-          <div>
-            <div style={{ display: "flex", gap: 12, marginBottom: 12, flexWrap: "wrap" }}>
-              <Chip label="Draft" value={`#${activeDraft.draft_id ?? activeDraft.id}`} />
-              <Chip label="Model" value={activeDraft.model_used} />
-              <Chip label="Story" value={`#${activeDraft.story_node_id}`} />
-              <Chip label="Framework" value={`#${activeDraft.framework_id}`} />
+      {/* --- Canvas --- */}
+      <section className="relative z-10">
+        <GlassPanel className="rounded-xl overflow-hidden min-h-[400px] relative">
+          {/* Canvas header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-black/5 bg-gradient-to-r from-indigo-50/50 to-violet-50/50">
+            <div className="flex items-center gap-2">
+              <span className={`w-2 h-2 rounded-full shadow-[0_0_8px_rgba(70,72,212,0.4)] ${activeDraft ? "bg-primary animate-pulse" : "bg-outline-variant"}`} />
+              <span className="font-label-caps text-label-caps text-on-surface">GENERATED DRAFT</span>
             </div>
-            <pre style={draftStyle}>{activeDraft.generated_text}</pre>
-            <button
-              onClick={() => navigator.clipboard.writeText(activeDraft.generated_text)}
-              style={{ ...secondaryBtnStyle, marginTop: 8 }}
+            <motion.button
+              onClick={handleCopy}
+              whileTap={{ scale: 0.95 }}
+              disabled={!activeDraft}
+              className="flex items-center gap-2 text-primary hover:bg-primary/5 px-3 py-1.5 rounded-lg transition-colors font-label-caps text-label-caps border border-primary/20 backdrop-blur-sm disabled:opacity-30"
             >
-              Copy
-            </button>
+              <Icon name={copied ? "check" : "content_copy"} size={16} />
+              {copied ? "Copied!" : "Copy"}
+            </motion.button>
           </div>
-        ) : (
-          <div style={{ color: "#aaa", marginTop: 48, textAlign: "center" }}>
-            {generating ? "Generating your draft…" : "Select a story + framework and click Generate Draft"}
-          </div>
-        )}
-      </div>
 
+          {/* Canvas content */}
+          <div className="p-8">
+            <AnimatePresence mode="wait">
+              {generating ? (
+                <motion.div
+                  key="generating"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex flex-col items-center justify-center py-16 gap-3"
+                >
+                  <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  <span className="font-label-caps text-label-caps text-on-surface-variant">Generating your draft...</span>
+                </motion.div>
+              ) : activeDraft ? (
+                <motion.div
+                  key="draft"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <pre className="font-mono-script text-mono-script text-on-surface whitespace-pre-wrap break-words leading-relaxed">
+                    {activeDraft.generated_text}
+                  </pre>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="empty"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex flex-col items-center justify-center py-16 gap-2 text-center"
+                >
+                  <Icon name="edit_note" size={32} className="text-outline-variant" />
+                  <span className="font-body text-body text-on-surface-variant">Select a story + framework and click Generate Draft</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Footer badges */}
+          {activeDraft && (
+            <div className="absolute bottom-4 right-6 flex items-center gap-3">
+              <span className="px-3 py-1 glass-panel text-[10px] font-label-caps text-primary uppercase border-primary/10">
+                Draft #{activeDraft.draft_id ?? activeDraft.id}
+              </span>
+              <span className="px-3 py-1 glass-panel text-[10px] font-label-caps text-secondary uppercase border-secondary/10">
+                {activeDraft.model_used}
+              </span>
+            </div>
+          )}
+        </GlassPanel>
+      </section>
+
+      {/* --- Recent drafts --- */}
+      {drafts.length > 0 && (
+        <section className="relative z-10 flex flex-col gap-3">
+          <h3 className="font-label-caps text-label-caps text-on-surface-variant px-2">RECENT DRAFTS</h3>
+          <div className="flex flex-col gap-3">
+            {drafts.slice(0, 5).map((d, i) => (
+              <motion.div
+                key={d.id}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+              >
+                <GlassPanel
+                  as="button"
+                  onClick={() => handleSelectDraft(d.id)}
+                  className={`group w-full text-left hover:border-primary/30 hover:bg-white p-card_padding rounded-xl flex items-center justify-between transition-all cursor-pointer ${activeDraft?.id === d.id ? "border-primary/30 bg-white" : ""}`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="bg-primary/5 border border-primary/10 p-2 rounded-lg">
+                      <Icon name="description" size={20} className="text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-body text-body text-on-surface">Draft #{d.id}</p>
+                      <p className="font-label-caps text-[10px] text-on-surface-variant mt-0.5">
+                        {d.created_at?.slice(0, 16)} · {d.model_used?.toUpperCase()}
+                      </p>
+                    </div>
+                  </div>
+                  <Icon name="chevron_right" size={20} className="text-on-surface-variant group-hover:text-primary transition-colors" />
+                </GlassPanel>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   )
 }
-
-function Chip({ label, value }) {
-  return (
-    <span style={{ fontSize: 12, background: "#f0f4ff", borderRadius: 4, padding: "3px 8px", color: "#555" }}>
-      <strong>{label}:</strong> {value}
-    </span>
-  )
-}
-
-const labelStyle = { display: "block", fontSize: 12, fontWeight: 600, color: "#555", marginBottom: 4 }
-const metaStyle = { fontSize: 11, color: "#888", marginTop: 4, lineHeight: 1.4 }
-const inputStyle = { width: "100%", padding: "7px 10px", borderRadius: 6, border: "1px solid #ddd", fontSize: 13, boxSizing: "border-box" }
-const primaryBtnStyle = { width: "100%", padding: "10px", background: "#1565c0", color: "#fff", border: "none", borderRadius: 6, fontSize: 14, fontWeight: 600, cursor: "pointer" }
-const secondaryBtnStyle = { width: "100%", marginTop: 6, padding: "8px", background: "#f5f5f5", color: "#333", border: "1px solid #ddd", borderRadius: 6, fontSize: 13, cursor: "pointer" }
-const draftStyle = { whiteSpace: "pre-wrap", wordBreak: "break-word", background: "#fafafa", border: "1px solid #e0e0e0", borderRadius: 8, padding: 20, fontSize: 14, lineHeight: 1.7, minHeight: 300 }

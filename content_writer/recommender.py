@@ -16,7 +16,10 @@ def score_stories(
             try:
                 parsed = json.loads(raw)
                 if isinstance(parsed, list):
-                    weekly_themes = {t.lower() for t in parsed}
+                    weekly_themes = {
+                        (t["display_name"] if isinstance(t, dict) else t).lower()
+                        for t in parsed if t
+                    }
                 elif isinstance(parsed, dict):
                     weekly_themes = {t.lower() for t in parsed.get("themes", [])}
             except (json.JSONDecodeError, TypeError):

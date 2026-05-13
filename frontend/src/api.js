@@ -11,3 +11,16 @@ export async function fetchPage(id) {
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res.json()
 }
+
+export async function triggerSync() {
+  const res = await fetch(`${BASE}/sync`, { method: "POST" })
+  if (res.status === 409) return { status: "busy" }
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json()
+}
+
+export async function fetchSyncStatus() {
+  const res = await fetch(`${BASE}/sync/status`)
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json()
+}

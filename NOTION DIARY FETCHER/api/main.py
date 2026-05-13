@@ -1,9 +1,15 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from pathlib import Path
+from datetime import datetime, timezone
 import sys
+import os
+import threading
+import tomllib
 import sqlite3
+
+from dotenv import load_dotenv
 
 # Narrative Warehouse API routes
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -27,6 +33,48 @@ from api.reel_routes import router as reel_router
 app.include_router(reel_router)
 
 DB_PATH = Path(__file__).parent.parent / "data" / "notion_diary.db"
+_ENV_PATH = Path(__file__).parent.parent / ".env"
+_CONFIG_PATH = Path(__file__).parent.parent / "config.toml"
+
+_sync_state: dict = {"status": "idle", "started_at": None, "finished_at": None, "error": None, "added": None}
+_sync_lock = threading.Lock()
+
+
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _run_sync_job():
+    global _sync_state
+    if not _sync_lock.acquire(blocking=False):
+        return
+    try:
+        load_dotenv(_ENV_PATH)
+        token = os.environ.get("NOTION_TOKEN")
+        database_id = os.environ.get("NOTION_DATABASE_ID")
+        if not token or not database_id:
+            raise ValueError("NOTION_TOKEN and NOTION_DATABASE_ID must be set in .env")
+
+        with open(_CONFIG_PATH, "rb") as f:
+            config = tomllib.load(f)
+
+        conn = sqlite3.connect(str(DB_PATH))
+        pre_count = conn.execute("SELECT COUNT(*) FROM pages").fetchone()[0]
+        conn.close()
+
+        sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+        from notion_fetcher.sync import run_sync
+        run_sync(token=token, database_id=database_id, config=config)
+
+        conn = sqlite3.connect(str(DB_PATH))
+        post_count = conn.execute("SELECT COUNT(*) FROM pages").fetchone()[0]
+        conn.close()
+
+        _sync_state.update(status="ok", finished_at=_now_iso(), error=None, added=post_count - pre_count)
+    except Exception as exc:
+        _sync_state.update(status="error", finished_at=_now_iso(), error=str(exc), added=None)
+    finally:
+        _sync_lock.release()
 
 
 def get_db() -> sqlite3.Connection:
@@ -60,8 +108,21 @@ class PageDetail(BaseModel):
 
 @app.get("/health")
 def health():
-    """Health check endpoint."""
     return {"status": "ok"}
+
+
+@app.post("/sync")
+def trigger_sync(background_tasks: BackgroundTasks):
+    if _sync_state["status"] == "running":
+        raise HTTPException(status_code=409, detail="sync already running")
+    _sync_state.update(status="running", started_at=_now_iso(), finished_at=None, error=None, added=None)
+    background_tasks.add_task(_run_sync_job)
+    return {"status": "running", "started_at": _sync_state["started_at"]}
+
+
+@app.get("/sync/status")
+def sync_status():
+    return dict(_sync_state)
 
 
 @app.get("/pages")
