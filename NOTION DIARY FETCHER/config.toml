@@ -23,7 +23,7 @@ base_url = "http://localhost:11434"
 default_model = "gemma-32k:latest"
 
 [content_writer]
-ollama_model = "gemma3:latest"
+ollama_model = "gemma4:e2b"
 ollama_host = "http://localhost:11434"
 max_source_chars = 12000
 default_story_limit = 20

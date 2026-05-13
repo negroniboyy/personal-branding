@@ -8,7 +8,7 @@ from .models import ContentDraft, Framework, StoryNode
 def get_story_nodes(conn: sqlite3.Connection, limit: int = 20) -> list[StoryNode]:
     rows = conn.execute(
         """
-        SELECT id, title, user_state, conflict_node, desired_outcome,
+        SELECT id, conflict_node, user_state, desired_outcome,
                the_bridge, thematic_tags, worth_score
         FROM story_nodes
         ORDER BY worth_score DESC
@@ -19,7 +19,7 @@ def get_story_nodes(conn: sqlite3.Connection, limit: int = 20) -> list[StoryNode
     return [
         StoryNode(
             id=r["id"],
-            title=r["title"] or "",
+            title=r["conflict_node"] or "",
             user_state=r["user_state"] or "",
             conflict_node=r["conflict_node"] or "",
             desired_outcome=r["desired_outcome"] or "",
@@ -34,29 +34,34 @@ def get_story_nodes(conn: sqlite3.Connection, limit: int = 20) -> list[StoryNode
 def get_frameworks(conn: sqlite3.Connection) -> list[Framework]:
     rows = conn.execute(
         """
-        SELECT id, name, hook_type, tone, paragraph_style, cta,
-               argument_pattern, fits_topics
+        SELECT id, source_file, hook_type, tone, paragraph_style, cta_type,
+               structure_json, fits_topics
         FROM frameworks
         """
     ).fetchall()
     return [
         Framework(
             id=r["id"],
-            name=r["name"] or "",
+            name=r["source_file"] or r["id"],
             hook_type=r["hook_type"] or "",
             tone=r["tone"] or "",
             paragraph_style=r["paragraph_style"] or "",
-            cta=r["cta"] or "",
-            argument_pattern=r["argument_pattern"] or "",
+            cta=r["cta_type"] or "",
+            argument_pattern=r["structure_json"] or "",
             fits_topics=_parse_json_list(r["fits_topics"]),
         )
         for r in rows
     ]
 
 
-def get_chunks_for_story(conn: sqlite3.Connection, story_node_id: int) -> list[str]:
+def get_chunks_for_story(conn: sqlite3.Connection, story_node_id: str) -> list[str]:
     rows = conn.execute(
-        "SELECT chunk_text FROM chunks WHERE story_node_id = ? ORDER BY chunk_index",
+        """
+        SELECT c.chunk_text FROM chunks c
+        JOIN story_nodes sn ON sn.page_id = c.page_id
+        WHERE sn.id = ?
+        ORDER BY c.chunk_index
+        """,
         (story_node_id,),
     ).fetchall()
     return [r["chunk_text"] for r in rows if r["chunk_text"]]

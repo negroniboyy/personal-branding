@@ -71,10 +71,11 @@ def generate_draft(
     prompt = build_prompt(story, framework, chunks, req.idea_prompt, max_chars)
 
     ollama_host = cfg.get("ollama_host", "http://localhost:11434")
+    model = req.model if req.model != "gemma3:latest" else cfg.get("ollama_model", req.model)
     text = llm_client.generate(
         prompt,
         provider=req.provider,
-        model=req.model,
+        model=model,
         ollama_host=ollama_host,
     )
 

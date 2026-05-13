@@ -1,73 +1,82 @@
 import { useState } from "react"
+import { AnimatePresence, motion } from "framer-motion"
 import PageList from "./components/PageList.jsx"
 import PageDetail from "./components/PageDetail.jsx"
 import NarrativeDashboard from "./components/NarrativeDashboard.jsx"
 import StoryNodeList from "./components/StoryNodeList.jsx"
 import ContentWriter from "./components/ContentWriter.jsx"
 import ReelWriter from "./components/ReelWriter.jsx"
+import IdeasTab from "./components/IdeasTab.jsx"
+import Sidebar from "./components/layout/Sidebar.jsx"
+import MobileNav from "./components/layout/MobileNav.jsx"
+
+const PAGE_TITLES = {
+  diary: "Diary",
+  narrative: "Narrative Warehouse",
+  writer: "Content Writer",
+  reels: "Reels",
+  ideas: "Ideas",
+}
 
 export default function App() {
   const [tab, setTab] = useState("diary")
   const [selectedPageId, setSelectedPageId] = useState(null)
 
+  function handleTabChange(newTab) {
+    setTab(newTab)
+    if (newTab !== "diary") setSelectedPageId(null)
+  }
+
   return (
-    <div style={{ maxWidth: 900, margin: "0 auto", padding: "2rem" }}>
-      <h1 style={{ marginBottom: "1.5rem" }}>Personal Brand</h1>
+    <div className="relative min-h-screen bg-background text-on-background font-body text-body selection:bg-primary-container selection:text-on-primary-container">
+      <div className="gradient-bg" />
 
-      <div style={{ display: "flex", gap: 4, marginBottom: 24, borderBottom: "1px solid #e0e0e0" }}>
-        <TabButton active={tab === "diary"} onClick={() => { setTab("diary"); setSelectedPageId(null) }}>
-          Diary
-        </TabButton>
-        <TabButton active={tab === "narrative"} onClick={() => setTab("narrative")}>
-          Narrative Warehouse
-        </TabButton>
-        <TabButton active={tab === "writer"} onClick={() => setTab("writer")}>
-          Content Writer
-        </TabButton>
-        <TabButton active={tab === "reels"} onClick={() => setTab("reels")}>
-          Reels
-        </TabButton>
-      </div>
+      <Sidebar activeTab={tab} onTabChange={handleTabChange} />
+      <MobileNav activeTab={tab} onTabChange={handleTabChange} />
 
-      {tab === "diary" && (
-        selectedPageId == null ? (
-          <PageList onSelect={setSelectedPageId} />
-        ) : (
-          <PageDetail pageId={selectedPageId} onBack={() => setSelectedPageId(null)} />
-        )
-      )}
+      <main className="md:pl-[300px] min-h-screen pb-20 md:pb-0">
+        <div className="max-w-[900px] mx-auto px-gutter py-section_padding">
 
-      {tab === "writer" && <ContentWriter />}
+          {/* Page heading */}
+          <motion.h1
+            key={tab}
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25 }}
+            className="font-h1 text-h1 text-on-surface mb-8"
+          >
+            {PAGE_TITLES[tab]}
+          </motion.h1>
 
-      {tab === "reels" && <ReelWriter />}
+          {/* Tab content with crossfade transition */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={tab + (selectedPageId ?? "")}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.22, ease: "easeOut" }}
+            >
+              {tab === "diary" && (
+                selectedPageId == null
+                  ? <PageList onSelect={setSelectedPageId} />
+                  : <PageDetail pageId={selectedPageId} onBack={() => setSelectedPageId(null)} />
+              )}
+              {tab === "writer" && <ContentWriter />}
+              {tab === "reels" && <ReelWriter />}
+              {tab === "ideas" && <IdeasTab />}
+              {tab === "narrative" && (
+                <div className="flex flex-col gap-0">
+                  <NarrativeDashboard />
+                  <h2 className="font-label-caps text-label-caps text-on-surface-variant mt-2 mb-4">STORY IDEAS</h2>
+                  <StoryNodeList />
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
 
-      {tab === "narrative" && (
-        <div>
-          <NarrativeDashboard />
-          <h2 style={{ fontSize: 18, fontWeight: 700, marginTop: 32, marginBottom: 16 }}>Story Ideas</h2>
-          <StoryNodeList />
         </div>
-      )}
+      </main>
     </div>
-  )
-}
-
-function TabButton({ active, onClick, children }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        padding: "8px 20px",
-        border: "none",
-        borderBottom: active ? "2px solid #1565c0" : "2px solid transparent",
-        background: "none",
-        cursor: "pointer",
-        fontSize: 14,
-        fontWeight: active ? 700 : 500,
-        color: active ? "#1565c0" : "#888",
-      }}
-    >
-      {children}
-    </button>
   )
 }

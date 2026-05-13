@@ -1,55 +1,42 @@
-# Personal Brand Monorepo — 2026-05-02
+# Personal Brand Monorepo — 2026-05-13
 
-**Stack:** Python 3.12 · uv · notion-client==2.2.1 · SQLite · FastAPI · React+Vite · Whisper · PySceneDetect · ffprobe · Ollama gemma-32k · **v1.5**
+**Stack:** Python 3.12 · uv · FastAPI · SQLite · React 18 · Vite · Tailwind v3.4 · framer-motion v11 · **Run:** `./start.sh` (3 Terminal tabs) · **v1.7**
 
 ## Status
-v1.4 reels pipeline + v1.5 centralized logger. `shared/logger.py` at repo root wired into narrative_warehouse, instagram_frameworks, linkedin_frameworks. 7-day auto-purge. Logs land in `personal_brand/logs/`.
+5-tab React frontend (Diary / Narrative / Writer / Reels / Ideas) wired to two FastAPI services on :8000 and :8001. v1.7 adds Ideas: capture spontaneous insights, generate LinkedIn drafts or Reel scripts inline without requiring a story node.
 
 ## File Map
 | File | Role |
 |------|------|
-| `NOTION DIARY FETCHER/api/main.py` | FastAPI app — mounts narrative_router + content_writer_router |
-| `NOTION DIARY FETCHER/config.toml` | All deps config; `[logger]` section added |
-| `shared/shared/logger.py` | Centralized logger factory — `get_logger(subsystem)` |
-| `shared/pyproject.toml` | Local uv package; installed into NOTION DIARY FETCHER venv |
-| `content_writer/api_routes.py` | /content-writer router (frameworks, recommendations, generate, drafts) |
-| `frameworks/instagram_frameworks/extract_reel.py` | Reel .mp4 → reel_frameworks table |
-| `frameworks/instagram_frameworks/script_writer.py` | story_nodes × reel_frameworks → reel_scripts table |
-| `frameworks/instagram_frameworks/llm_client.py` | Ollama client; reads config.toml; logger wired |
-| `frameworks/linkedin_frameworks/extract_linkedin.py` | LinkedIn .txt → frameworks table |
-| `narrative_warehouse/stage1_extractor.py` | Diary pages → story_nodes; logger wired |
-| `narrative_warehouse/stage2_synthesizer.py` | story_nodes → weekly_index + threads; logger wired |
-| `frontend/src/components/ContentWriter.jsx` | Story+framework picker, generate, drafts panel |
-
-## Run Commands
-```bash
-# Backend
-cd "NOTION DIARY FETCHER" && uv run uvicorn api.main:app --host 127.0.0.1 --port 8000
-# Frontend
-cd frontend && npm run dev   # http://localhost:5173
-# Sync diary
-cd "NOTION DIARY FETCHER" && uv run sync
-# Extract reel framework (run from NOTION DIARY FETCHER/)
-uv run python ../frameworks/instagram_frameworks/extract_reel.py --file ../frameworks/instagram_frameworks/references/<file>.mp4
-# Generate reel script
-uv run python ../frameworks/instagram_frameworks/script_writer.py [--idea TEXT] [--story-id ID] [--framework-id ID] [--dry-run]
-# After adding new deps to shared/
-cd "NOTION DIARY FETCHER" && uv sync
-```
+| `NOTION DIARY FETCHER/api/main.py` | FastAPI :8000 — mounts narrative, content_writer, reel, sync routers |
+| `NOTION DIARY FETCHER/api/reel_routes.py` | /reels router (generate, scan, open-folder) |
+| `NOTION DIARY FETCHER/config.toml` | All config: `ollama_model`, `[logger]`, `[script_writer]` |
+| `Ideas Draft/main.py` | FastAPI :8001 — 6 /ideas endpoints + startup DB migration |
+| `Ideas Draft/repository.py` | DB queries: ideas table, idea_id FK linkage to drafts/scripts |
+| `content_writer/service.py` | LinkedIn draft generation; uses `ollama_model` from config |
+| `content_writer/repository.py` | story_nodes / frameworks / drafts queries |
+| `frameworks/instagram_frameworks/script_writer.py` | story_nodes × reel_frameworks → reel_scripts |
+| `shared/shared/logger.py` | `get_logger(subsystem)` — logs to `personal_brand/logs/` |
+| `frontend/src/App.jsx` | Tab router — 5 tabs including Ideas |
+| `frontend/src/components/layout/Sidebar.jsx` | 5-item nav; "New Idea" fires `create-idea` CustomEvent |
+| `frontend/src/components/IdeasTab.jsx` | Master-detail ideas list |
+| `frontend/src/components/IdeaDetail.jsx` | Editable title/body, inline generate, child drafts list |
+| `frontend/src/ideasApi.js` | Fetch wrappers for :8001 |
+| `frontend/tailwind.config.js` | StudioBrand design tokens |
 
 ## Edit Here When...
 | Change | File |
 |--------|------|
-| Logger level or retention | `NOTION DIARY FETCHER/config.toml` `[logger]` |
-| Logger factory logic | `shared/shared/logger.py` |
-| Add logging to a new subsystem | `from shared.logger import get_logger` at module top; add name to CLAUDE.md §7 |
-| Reel extraction prompt / pacing | `frameworks/instagram_frameworks/prompts/extract_reel.txt` |
-| Reel script format / scene template | `frameworks/instagram_frameworks/prompts/script_writer.txt` |
-| Notion API auth or pagination | `NOTION DIARY FETCHER/src/notion_fetcher/client.py` |
-| SQLite schema or upsert | `NOTION DIARY FETCHER/src/notion_fetcher/database.py` |
-| Frontend UI changes | `frontend/src/components/ContentWriter.jsx` |
+| Add/rename sidebar tabs | `Sidebar.jsx` + `App.jsx` |
+| Ideas API endpoints | `Ideas Draft/main.py` |
+| Ideas DB schema | `Ideas Draft/repository.py` → `run_migration()` |
+| LinkedIn generation model | `NOTION DIARY FETCHER/config.toml` → `[content_writer] ollama_model` |
+| Reel generation model | `NOTION DIARY FETCHER/config.toml` → `[script_writer] ollama_model` |
+| Notion sync / diary fetch | `NOTION DIARY FETCHER/src/notion_fetcher/sync.py` |
+| Design tokens / glass styles | `frontend/tailwind.config.js` + `frontend/src/index.css` |
+| Reel extraction prompt | `frameworks/instagram_frameworks/prompts/extract_reel.txt` |
 
 ## Active Context
-- **Done:** v1.5 logger shipped — `shared/shared/logger.py`, `uv sync` installs it, wired into narrative_warehouse (stage1, stage2, api_routes, llm_client) + instagram_frameworks (extract_reel, script_writer, llm_client) + linkedin_frameworks (extract_linkedin, llm_client); CLAUDE.md §7 added; logs/ at repo root; 7-day purge verified
-- **Next:** populate more reel references in `frameworks/instagram_frameworks/references/`; first real `script_writer.py` end-to-end run; manual `visual_notes` UPDATE per reel
-- **Notes:** `shared` is a uv editable dep — run `uv sync` from `NOTION DIARY FETCHER/` after any `shared/pyproject.toml` changes; reel CLIs must run from `NOTION DIARY FETCHER/` for venv resolution; `NOTION DIARY FETCHER/ui/` is stale (superseded by `frontend/`) — safe to delete
+- **Done:** v1.7 Ideas feature — `Ideas Draft/` FastAPI service, master-detail IdeasTab, inline LinkedIn + Reel generation, `idea_id` FK on drafts/scripts, `start.sh` launches all 3 services, `ollama_model` fixed to `gemma4:e2b`.
+- **Next:** Delete 2 blank test ideas (`idea_e867ca43`, `idea_538f4d2b`); add delete-idea endpoint if needed.
+- **Notes:** `Ideas Draft/` directory has a space — uvicorn must run from inside it. Story node IDs are TEXT (`sn_xxx`). Shared DB: `NOTION DIARY FETCHER/data/notion_diary.db`. Tailwind v3 only.
