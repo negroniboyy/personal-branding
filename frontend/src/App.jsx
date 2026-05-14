@@ -7,6 +7,7 @@ import StoryNodeList from "./components/StoryNodeList.jsx"
 import ContentWriter from "./components/ContentWriter.jsx"
 import ReelWriter from "./components/ReelWriter.jsx"
 import IdeasTab from "./components/IdeasTab.jsx"
+import FrameworksTab from "./components/FrameworksTab.jsx"
 import Sidebar from "./components/layout/Sidebar.jsx"
 import MobileNav from "./components/layout/MobileNav.jsx"
 
@@ -16,6 +17,7 @@ const PAGE_TITLES = {
   writer: "Content Writer",
   reels: "Reels",
   ideas: "Ideas",
+  frameworks: "Frameworks",
 }
 
 export default function App() {
@@ -65,6 +67,7 @@ export default function App() {
               {tab === "writer" && <ContentWriter />}
               {tab === "reels" && <ReelWriter />}
               {tab === "ideas" && <IdeasTab />}
+              {tab === "frameworks" && <FrameworksTab />}
               {tab === "narrative" && (
                 <div className="flex flex-col gap-0">
                   <NarrativeDashboard />

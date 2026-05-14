@@ -1,7 +1,8 @@
 framework_id: AUTO_GENERATE
 creator: Nina Devouge
 channel: linkedin
-source_file: 2.txt
+description: "Challenge a widely held career assumption upfront, then build the counter-argument with actionable frameworks for both job seekers and managers; great for leadership and networking posts."
+source_file: "Contrarian: Manager > Role (Dual Playbook)"
 structure:
 - poses a strong, counter-intuitive claim about career success
 - introduces a general observation (the importance of the first boss)

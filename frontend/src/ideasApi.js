@@ -1,4 +1,4 @@
-const BASE = "http://localhost:8001"
+const BASE = "http://localhost:8000"
 
 async function _fetch(path, opts = {}) {
   const res = await fetch(`${BASE}${path}`, opts)
@@ -36,3 +36,9 @@ export const generateReelScript = (id, payload = {}) =>
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   })
+
+export const deleteIdea = (id) =>
+  _fetch(`/ideas/${id}`, { method: "DELETE" })
+
+export const deleteIdeaDraft = (ideaId, draftId, channel) =>
+  _fetch(`/ideas/${ideaId}/drafts/${draftId}?channel=${channel}`, { method: "DELETE" })

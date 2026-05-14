@@ -3,6 +3,8 @@ import tomllib
 from pathlib import Path
 from typing import Optional
 
+from shared.md_mirror import write_draft_md
+
 from . import llm_client, recommender, repository
 from .db import get_connection, run_migration
 from .models import (
@@ -87,6 +89,21 @@ def generate_draft(
         model_used=f"{req.provider}/{req.model}",
     )
     draft_id = repository.save_draft(conn, draft)
+    created_row = conn.execute(
+        "SELECT created_at FROM content_drafts WHERE id = ?", (draft_id,)
+    ).fetchone()
+    try:
+        write_draft_md({
+            "id": draft_id,
+            "story_node_id": draft.story_node_id,
+            "framework_id": draft.framework_id,
+            "model_used": draft.model_used,
+            "created_at": created_row["created_at"] if created_row else None,
+            "generated_text": text,
+        })
+    except Exception as e:
+        from shared.logger import get_logger as _get_logger
+        _get_logger("md_mirror").warning("write_draft_md failed for id=%s: %s", draft_id, e)
 
     return GenerateResult(
         draft_id=draft_id,

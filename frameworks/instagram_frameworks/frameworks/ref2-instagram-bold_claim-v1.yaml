@@ -1,0 +1,57 @@
+framework_id: AUTO_GENERATE
+creator: unknown
+channel: instagram_reel
+description: "Conversational bold hook about learning a skill in 90 days, delivers a free resource roadmap beat by beat with no hard CTA; suits developer, coding, and career-learning audiences."
+source_file: "90-Day Python Roadmap (Free)"
+hook:
+  type: bold_claim
+  first_line: If you were to disappear for 90 days and learn Python, this is how you
+    should do it.
+structure:
+- beat: hook_setup
+  start_sec: 0.0
+  end_sec: 4.32
+  description: If you were to disappear for 90 days and learn Python, this is how
+    you should do it.
+- beat: value_proposition
+  start_sec: 4.32
+  end_sec: 6.4
+  description: And this is all free, so say this video.
+- beat: resource_listing
+  start_sec: 6.4
+  end_sec: 13.92
+  description: I'm going to start with this. The was best free programming course,
+    CS50. And if you need to supplement it, use this course on YouTube by Broco. These
+    will teach you the basics and you can't skip this stuff.
+- beat: application_buildout
+  start_sec: 13.92
+  end_sec: 25.68
+  description: These will teach you the basics and you can't skip this stuff. And
+    while you're doing that, go on this website. It's like going to the gym, but for
+    coders. Also practice Python is good. You're teaching your brain to become a problem
+    solver, but with nice, easy, small problems.
+- beat: transition_to_building
+  start_sec: 25.68
+  end_sec: 28.24
+  description: Now, no more tutorials. We're going to start building stuff.
+- beat: project_resource
+  start_sec: 28.32
+  end_sec: 33.04
+  description: And this GitHub is perfect for that. It's got beginner, intermediate,
+    and advanced projects for its attack.
+- beat: conclusion_tip
+  start_sec: 33.6
+  end_sec: 35.6
+  description: You know Python, build stuff, break stuff.
+pacing: fast
+tone: conversational
+cta:
+  type: none
+  verbal: ''
+fits_topics:
+- Python
+- programming
+- coding
+- career
+- learning
+performance_notes: ''

@@ -1,42 +1,39 @@
-# Personal Brand Monorepo — 2026-05-13
+# Personal Brand Monorepo — 2026-05-14
 
-**Stack:** Python 3.12 · uv · FastAPI · SQLite · React 18 · Vite · Tailwind v3.4 · framer-motion v11 · **Run:** `./start.sh` (3 Terminal tabs) · **v1.7**
+**Stack:** Python 3.12 · uv · FastAPI · SQLite · React 18 · Vite · Tailwind v3.4 · framer-motion v11 · **Run:** `./start.sh` (2 Terminal tabs) · **v1.9**
 
 ## Status
-5-tab React frontend (Diary / Narrative / Writer / Reels / Ideas) wired to two FastAPI services on :8000 and :8001. v1.7 adds Ideas: capture spontaneous insights, generate LinkedIn drafts or Reel scripts inline without requiring a story node.
+6-tab React frontend (Diary / Narrative / Writer / Reels / Ideas / Frameworks) wired to a single FastAPI on :8000. v1.9 adds disk MD mirror for scripts/drafts (DB primary), inline edit/delete/open-folder on Reels + Content Writer, full Frameworks CRUD tab, and intelligent framework titles synced across dropdowns.
 
 ## File Map
 | File | Role |
 |------|------|
-| `NOTION DIARY FETCHER/api/main.py` | FastAPI :8000 — mounts narrative, content_writer, reel, sync routers |
-| `NOTION DIARY FETCHER/api/reel_routes.py` | /reels router (generate, scan, open-folder) |
-| `NOTION DIARY FETCHER/config.toml` | All config: `ollama_model`, `[logger]`, `[script_writer]` |
-| `Ideas Draft/main.py` | FastAPI :8001 — 6 /ideas endpoints + startup DB migration |
-| `Ideas Draft/repository.py` | DB queries: ideas table, idea_id FK linkage to drafts/scripts |
-| `content_writer/service.py` | LinkedIn draft generation; uses `ollama_model` from config |
-| `content_writer/repository.py` | story_nodes / frameworks / drafts queries |
-| `frameworks/instagram_frameworks/script_writer.py` | story_nodes × reel_frameworks → reel_scripts |
-| `shared/shared/logger.py` | `get_logger(subsystem)` — logs to `personal_brand/logs/` |
-| `frontend/src/App.jsx` | Tab router — 5 tabs including Ideas |
-| `frontend/src/components/layout/Sidebar.jsx` | 5-item nav; "New Idea" fires `create-idea` CustomEvent |
-| `frontend/src/components/IdeasTab.jsx` | Master-detail ideas list |
-| `frontend/src/components/IdeaDetail.jsx` | Editable title/body, inline generate, child drafts list |
-| `frontend/src/ideasApi.js` | Fetch wrappers for :8001 |
-| `frontend/tailwind.config.js` | StudioBrand design tokens |
+| `NOTION DIARY FETCHER/api/main.py` | FastAPI :8000 — mounts narrative, content_writer, reel, ideas, frameworks routers; startup runs migrations + MD backfill |
+| `NOTION DIARY FETCHER/api/reel_routes.py` | /reels router — generate, scan, open-scripts-folder, PATCH/DELETE script + MD mirror |
+| `NOTION DIARY FETCHER/config.toml` | All config: `ollama_model`, `[logger]`, `[script_writer]`, `[md_mirror] scripts_dir / drafts_dir` |
+| `shared/shared/md_mirror.py` | MD write/delete/backfill for scripts & drafts (YAML frontmatter + body, idempotent) |
+| `frameworks/api_routes.py` | /frameworks router — GET list/detail, PUT (validate YAML → write file + UPDATE DB), DELETE |
+| `frameworks/instagram_frameworks/script_writer.py` | story_nodes × reel_frameworks → reel_scripts; calls md_mirror.write_script_md after insert |
+| `content_writer/api_routes.py` | /content-writer — PATCH/DELETE draft + open-folder; mirrors on save |
+| `content_writer/repository.py` | story_nodes / frameworks / drafts; `Framework.name = source_file or id` |
+| `ideas/routes.py` | /ideas APIRouter — list/create/get/patch/delete + LinkedIn/Reel generate |
+| `frontend/src/App.jsx` | Tab router — 6 tabs including Frameworks |
+| `frontend/src/components/FrameworksTab.jsx` | Master/detail YAML editor — title/description fields patch `source_file`/`description` in YAML |
+| `frontend/src/components/ReelWriter.jsx` / `ContentWriter.jsx` | Editable textarea canvas, folder/save/delete buttons, dropdowns show `source_file — meta` |
+| `frontend/src/frameworksApi.js` | fetchFrameworksList/Framework, putFramework, deleteFramework |
 
 ## Edit Here When...
 | Change | File |
 |--------|------|
 | Add/rename sidebar tabs | `Sidebar.jsx` + `App.jsx` |
-| Ideas API endpoints | `Ideas Draft/main.py` |
-| Ideas DB schema | `Ideas Draft/repository.py` → `run_migration()` |
-| LinkedIn generation model | `NOTION DIARY FETCHER/config.toml` → `[content_writer] ollama_model` |
-| Reel generation model | `NOTION DIARY FETCHER/config.toml` → `[script_writer] ollama_model` |
-| Notion sync / diary fetch | `NOTION DIARY FETCHER/src/notion_fetcher/sync.py` |
+| Framework CRUD endpoints | `frameworks/api_routes.py` |
+| Script/draft MD format or path | `shared/shared/md_mirror.py` + `[md_mirror]` in `config.toml` |
+| Dropdown label format | `ReelWriter.jsx` / `ContentWriter.jsx` framework `<select>` option block |
+| Framework display title | Frameworks tab → TITLE field (writes `source_file` in YAML + DB) |
+| LinkedIn / Reel generation model | `config.toml` → `[content_writer]` / `[script_writer] ollama_model` |
 | Design tokens / glass styles | `frontend/tailwind.config.js` + `frontend/src/index.css` |
-| Reel extraction prompt | `frameworks/instagram_frameworks/prompts/extract_reel.txt` |
 
 ## Active Context
-- **Done:** v1.7 Ideas feature — `Ideas Draft/` FastAPI service, master-detail IdeasTab, inline LinkedIn + Reel generation, `idea_id` FK on drafts/scripts, `start.sh` launches all 3 services, `ollama_model` fixed to `gemma4:e2b`.
-- **Next:** Delete 2 blank test ideas (`idea_e867ca43`, `idea_538f4d2b`); add delete-idea endpoint if needed.
-- **Notes:** `Ideas Draft/` directory has a space — uvicorn must run from inside it. Story node IDs are TEXT (`sn_xxx`). Shared DB: `NOTION DIARY FETCHER/data/notion_diary.db`. Tailwind v3 only.
+- **Done:** v1.9 — MD mirror utility + startup backfill; Reels/ContentWriter inline edit/delete/open-folder; Frameworks tab with editable title (source_file) / description / full YAML; all 17 framework titles renamed intelligently (e.g. "Career Thesis -> 5 Lessons + Anecdote", "90-Day Python Roadmap (Free)"); dropdowns in both writers now show `source_file — hook_type · pacing/tone · cta`.
+- **Next:** Optional — purge stale `ref1-instagram-contrarian-v1` DB row whose YAML was deleted; consider custom dropdown component to render multi-line option (title + subtitle).
+- **Notes:** `scripts/` and `drafts/` are gitignored MD mirrors. Framework PUT validates YAML before touching disk. Both `frameworks` (LinkedIn) and `reel_frameworks` (Reels) tables share the same router, dispatched on `channel` path param.

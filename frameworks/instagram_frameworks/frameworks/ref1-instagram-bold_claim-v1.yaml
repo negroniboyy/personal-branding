@@ -1,53 +1,65 @@
 framework_id: AUTO_GENERATE
 creator: unknown
 channel: instagram_reel
-source_file: reel_source
+description: "Fast-paced authoritative hook about storytelling or influence, builds through a 12-beat conflict-to-insight arc, closes with a DM lead-gen CTA; best for content-strategy, communication, and relationships Reels."
+source_file: "Storytelling Insight -> 12-Beat Arc + DM"
 hook:
-  type: contrarian
+  type: bold_claim
   first_line: The fastest way to kill your storytelling is to think that this is just
     about making viral content
 structure:
-- beat: hook_problem_statement
+- beat: hook
   start_sec: 0.0
   end_sec: 4.22
   description: The fastest way to kill your storytelling is to think that this is
     just about making viral content
-- beat: problem_elaboration
+- beat: conflict_build
   start_sec: 5.34
   end_sec: 10.38
   description: You learn the structure from my viral video and you apply it. So why
     does your content still get ignored?
-- beat: diagnosis_and_promise
+- beat: problem_definition
   start_sec: 10.38
   end_sec: 16.7
   description: It's because you're doing what most people are doing checking boxes
     instead of understanding why this works and here are three things
-- beat: framework_setup
+- beat: insight_point_1
   start_sec: 16.7
-  end_sec: 23.64
+  end_sec: 20.1
   description: You missed the first thing they're actually six major storytelling
-    frameworks. But they all do exactly the same thing which brings me to the next
+    frameworks
+- beat: transition
+  start_sec: 20.1
+  end_sec: 23.64
+  description: But they all do exactly the same thing which brings me to the next
     thing you missed
-- beat: thesis_reframe
+- beat: deep_concept_reveal
   start_sec: 24.04
   end_sec: 32.94
   description: Storytelling isn't just a trick for creators. It's a blueprint that
     guides human emotion. It makes people see themselves feel the friction then arrive
-    at a resolution and a third thing
-- beat: scope_expansion
+    at a resolution
+- beat: conflict_escalation
   start_sec: 32.94
-  end_sec: 43.74
+  end_sec: 38.0
   description: Also your biggest mistake. You're not thinking big enough storytelling
-    is not just about better content. It's about influence. Thank landing a job getting
-    that raise your too scared to ask for making your first sale
-- beat: influence_definition
+    is not just about better content
+- beat: payoff_setup
+  start_sec: 38.0
+  end_sec: 43.74
+  description: It's about influence. Thank landing a job getting that raise your too
+    scared to ask for making your first sale
+- beat: value_proposition
   start_sec: 43.94
-  end_sec: 53.84
+  end_sec: 51.84
   description: Building relationships with those who matter resolving conflicts that
     keep you up at night every time you need someone going from where they are now
-    to where you want them to be and if you're still watching, that's exactly what
-    it just did to you
-- beat: key_takeaway
+    to where you want them to be and if you're still watching
+- beat: mini_payoff
+  start_sec: 51.84
+  end_sec: 53.84
+  description: That's exactly what it just did to you
+- beat: summary_and_call
   start_sec: 54.06
   end_sec: 58.88
   description: Study the frameworks to write better stories, but understand the why
@@ -57,16 +69,16 @@ structure:
   end_sec: 64.2
   description: I broke everything down in a free guide DM me blueprint and I'll send
     it over. Let me know what you think in the comments. Please
-pacing: medium
+pacing: fast
 tone: authoritative
 cta:
   type: soft_sell
   verbal: I broke everything down in a free guide DM me blueprint and I'll send it
-    over. Let me know what you think in the comments. Please
+    over.
 fits_topics:
 - storytelling
 - influence
+- content-strategy
+- communication
 - relationships
-- emotion
-- content-creation
-performance_notes: ''
+performance_notes: null

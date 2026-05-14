@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import llm_client
+import yaml
 from shared.logger import get_logger
 
 logger = get_logger("instagram_frameworks")
@@ -28,6 +29,25 @@ if not DB_PATH.exists():
 # DB
 # ---------------------------------------------------------------------------
 
+def _backfill_reel_descriptions(conn: sqlite3.Connection) -> None:
+    rows = conn.execute(
+        "SELECT id, yaml_path FROM reel_frameworks WHERE description IS NULL OR description = ''"
+    ).fetchall()
+    for row in rows:
+        try:
+            with open(row["yaml_path"], "r", encoding="utf-8") as f:
+                data = yaml.safe_load(f)
+            desc = (data or {}).get("description", "")
+            if desc:
+                conn.execute(
+                    "UPDATE reel_frameworks SET description = ? WHERE id = ?",
+                    (desc, row["id"]),
+                )
+        except Exception:
+            pass
+    conn.commit()
+
+
 def init_db(conn: sqlite3.Connection) -> None:
     conn.executescript("""
         CREATE TABLE IF NOT EXISTS reel_scripts (
@@ -41,7 +61,15 @@ def init_db(conn: sqlite3.Connection) -> None:
             created_at          TEXT NOT NULL
         );
     """)
+    for alter in [
+        "ALTER TABLE reel_frameworks ADD COLUMN description TEXT DEFAULT ''",
+    ]:
+        try:
+            conn.execute(alter)
+        except Exception:
+            pass
     conn.commit()
+    _backfill_reel_descriptions(conn)
 
 
 # ---------------------------------------------------------------------------

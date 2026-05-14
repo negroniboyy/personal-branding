@@ -1,7 +1,8 @@
 framework_id: AUTO_GENERATE
 creator: Nina Devouge
 channel: linkedin
-source_file: linkedin_post
+description: "Drop a direct career claim about what really matters in a job search, then back it with tight manager-evaluation criteria; best for career, leadership, and job-hunting posts."
+source_file: "Job Hunt Claim -> 3 Manager Criteria"
 structure:
 - makes a bold, definitive statement about job hunting priorities.
 - provides a short, supportive quote to back up the premise.

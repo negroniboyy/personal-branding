@@ -1,9 +1,12 @@
+import subprocess
+import sys
 from dataclasses import asdict
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 
+from shared.md_mirror import delete_draft_md, write_draft_md
 from .db import get_connection
 from .models import RecommendationRequest, GenerateRequest
 from . import service
@@ -24,6 +27,10 @@ class GenerateRequestBody(BaseModel):
     idea_prompt: Optional[str] = None
     provider: str = "ollama"
     model: str = "gemma3:latest"
+
+
+class PatchDraftBody(BaseModel):
+    generated_text: str
 
 
 # --- Routes ---
@@ -82,3 +89,49 @@ def get_draft(draft_id: int):
     if not draft:
         raise HTTPException(status_code=404, detail="Draft not found")
     return asdict(draft)
+
+
+@router.patch("/drafts/{draft_id}")
+def patch_draft(draft_id: int, body: PatchDraftBody):
+    with get_connection() as conn:
+        from .repository import update_draft
+        draft = update_draft(conn, draft_id, body.generated_text)
+    if not draft:
+        raise HTTPException(status_code=404, detail="Draft not found")
+    row = asdict(draft)
+    try:
+        write_draft_md(row)
+    except Exception as e:
+        from shared.logger import get_logger
+        get_logger("md_mirror").warning("write_draft_md failed on patch id=%s: %s", draft_id, e)
+    return row
+
+
+@router.delete("/drafts/{draft_id}")
+def delete_draft_route(draft_id: int):
+    with get_connection() as conn:
+        from .repository import delete_draft
+        deleted = delete_draft(conn, draft_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Draft not found")
+    try:
+        delete_draft_md(draft_id)
+    except Exception as e:
+        from shared.logger import get_logger
+        get_logger("md_mirror").warning("delete_draft_md failed for id=%s: %s", draft_id, e)
+    return {"ok": True}
+
+
+@router.post("/open-folder")
+def open_drafts_folder():
+    from shared.md_mirror import _load_dirs
+    _, drafts_dir = _load_dirs()
+    drafts_dir.mkdir(parents=True, exist_ok=True)
+    plat = sys.platform
+    if plat == "darwin":
+        subprocess.Popen(["open", str(drafts_dir)])
+    elif plat.startswith("linux"):
+        subprocess.Popen(["xdg-open", str(drafts_dir)])
+    else:
+        raise HTTPException(status_code=501, detail=f"open-folder not supported on {plat}")
+    return {"opened": True, "path": str(drafts_dir)}

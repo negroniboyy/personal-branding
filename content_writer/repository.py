@@ -35,7 +35,7 @@ def get_frameworks(conn: sqlite3.Connection) -> list[Framework]:
     rows = conn.execute(
         """
         SELECT id, source_file, hook_type, tone, paragraph_style, cta_type,
-               structure_json, fits_topics
+               structure_json, fits_topics, description
         FROM frameworks
         """
     ).fetchall()
@@ -49,6 +49,7 @@ def get_frameworks(conn: sqlite3.Connection) -> list[Framework]:
             cta=r["cta_type"] or "",
             argument_pattern=r["structure_json"] or "",
             fits_topics=_parse_json_list(r["fits_topics"]),
+            description=r["description"] or "",
         )
         for r in rows
     ]
@@ -107,6 +108,21 @@ def get_drafts(conn: sqlite3.Connection, limit: int = 20) -> list[ContentDraft]:
         (limit,),
     ).fetchall()
     return [_row_to_draft(r) for r in rows]
+
+
+def update_draft(conn: sqlite3.Connection, draft_id: int, generated_text: str) -> Optional[ContentDraft]:
+    conn.execute(
+        "UPDATE content_drafts SET generated_text = ? WHERE id = ?",
+        (generated_text, draft_id),
+    )
+    conn.commit()
+    return get_draft(conn, draft_id)
+
+
+def delete_draft(conn: sqlite3.Connection, draft_id: int) -> bool:
+    cur = conn.execute("DELETE FROM content_drafts WHERE id = ?", (draft_id,))
+    conn.commit()
+    return cur.rowcount > 0
 
 
 def get_draft(conn: sqlite3.Connection, draft_id: int) -> Optional[ContentDraft]:

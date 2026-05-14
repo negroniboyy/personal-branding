@@ -1,7 +1,8 @@
 framework_id: AUTO_GENERATE
 creator: unknown
 channel: linkedin
-source_file: 5.txt
+description: "Lead with a bold productivity claim targeting overworkers, give a copy-paste actionable framework, then pivot to an execution-over-ideas thesis; ideal for time management and career efficiency posts."
+source_file: "Overwork Hook -> Copy-Paste Script"
 structure:
 - establishes a relatable premise (working long hours)
 - provides highly actionable, copy-and-paste advice

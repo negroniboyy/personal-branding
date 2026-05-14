@@ -1,7 +1,8 @@
 framework_id: AUTO_GENERATE
 creator: unknown
 channel: linkedin
-source_file: linkedin_post
+description: "Start with a direct pain-point hook, reframe limiting beliefs with a visual ❌ vs ✅ pattern, summarize the pattern, and close with a soft-sell; ideal for mindset, self-doubt, and online business posts."
+source_file: "Pain Hook -> Belief Rebuttal (X/V)"
 structure:
 - states an immediate premise ("I'm going to keep it short.")
 - presents a core thesis statement (The struggle is internal, not logistical)

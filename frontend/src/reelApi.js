@@ -51,6 +51,35 @@ export async function postReelScan() {
   return res.json()
 }
 
+export async function patchReelScript(id, generated_text) {
+  const res = await fetch(`${BASE}/reels/scripts/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ generated_text }),
+  })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json()
+}
+
+export async function deleteReelScript(id) {
+  const res = await fetch(`${BASE}/reels/scripts/${id}`, { method: "DELETE" })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json()
+}
+
+export async function postReelOpenScripts() {
+  const res = await fetch(`${BASE}/reels/open-scripts-folder`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({}),
+  })
+  if (!res.ok) {
+    const detail = await res.json().catch(() => ({}))
+    throw new Error(detail.detail || `HTTP ${res.status}`)
+  }
+  return res.json()
+}
+
 export async function postReelOpenReferences() {
   const res = await fetch(`${BASE}/reels/open-references`, {
     method: "POST",

@@ -1,0 +1,54 @@
+framework_id: AUTO_GENERATE
+creator: unknown
+channel: instagram_reel
+description: "Fast authoritative hook about content burnout, expose the 3 creator mistakes in rapid succession, pivot to a sustainable workflow, close with a DM lead-gen CTA; ideal for creator-economy and productivity Reels."
+source_file: "3 Creator Mistakes -> DM Lead-Gen"
+hook:
+  type: bold_claim
+  first_line: The fastest way to cure your content career.
+structure:
+- beat: hook
+  start_sec: 0.0
+  end_sec: 4.24
+  description: The fastest way to cure your content career. Explain in 60 seconds.
+    Making content solo is brutal, especially after a long work day.
+- beat: problem_statement
+  start_sec: 7.88
+  end_sec: 12.36
+  description: And if you want content to bring real opportunities, pay extra attention
+    to the third mistake.
+- beat: conflict_build
+  start_sec: 12.36
+  end_sec: 23.68
+  description: The first way to kill it, waiting for a gear upgrade. Most creators
+    started with a phone and a system, not fancy equipment. A new camera won't automatically
+    make you better content. It just delays starting. The second way, doing everything
+    in one sitting. You script, film, and edit in one marathon.
+- beat: main_point_3
+  start_sec: 37.76
+  end_sec: 47.56
+  description: The third way, and the biggest trap, keeping up with everyone else.
+    You're told to post daily by most creators. But without a scalable workflow, that's
+    how 75% of creators quit in year one. Because they burned out by pushing too hard,
+    too fast.
+- beat: solution_pivot
+  start_sec: 50.24
+  end_sec: 55.72
+  description: The ones who last actually move at their own pace. I made this video
+    using a workflow you can actually stick to.
+- beat: cta
+  start_sec: 55.72
+  end_sec: 57.76
+  description: DM me solo, and I'll send it over. Try it out.
+pacing: fast
+tone: authoritative
+cta:
+  type: soft_sell
+  verbal: DM me solo, and I'll send it over.
+fits_topics:
+- content_creation
+- workflow
+- consistency
+- burnout
+- productivity
+performance_notes: ''
