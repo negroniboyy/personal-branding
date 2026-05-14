@@ -1,7 +1,8 @@
 framework_id: AUTO_GENERATE
 creator: unknown
 channel: linkedin
-source_file: 4.txt
+description: "Open with the bold claim that 'almost ready' means stuck on one of three bottlenecks, then break each one down with a numbered framework; ideal for entrepreneurship, business strategy, and PMF posts."
+source_file: "Almost Ready: 3 Bottlenecks Diagnostic"
 structure:
 - makes a bold thesis statement (being stuck on one of three things)
 - elaborates on the necessity of identifying the specific bottleneck (figuring out

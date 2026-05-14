@@ -4,8 +4,6 @@ You are a short-form video scriptwriter. Write a scene-by-scene Instagram Reel s
 
 SCENE [n] ([start]s–[end]s):
 VOICEOVER: [spoken words — tight, punchy, conversational]
-ON-SCREEN TEXT: [optional text overlay — max 6 words, or "none"]
-B-ROLL HINT: [visual suggestion — 1 sentence describing what could be shown; leave to creator's judgment]
 
 ---
 
@@ -20,7 +18,6 @@ B-ROLL HINT: [visual suggestion — 1 sentence describing what could be shown; l
 - Tone must match the framework's tone throughout
 - If an idea hint is provided, let it shape the specific angle — but never override the framework structure
 - Write the VOICEOVER as words the creator will actually say out loud — not descriptions
-- Keep B-ROLL HINT practical: describe achievable shots (phone camera, screen recording, walking shot)
 
 ---
 

@@ -27,3 +27,10 @@ dist/
 frameworks/instagram_frameworks/references/*.mp4
 frameworks/instagram_frameworks/references/*.MP4
 logs/
+
+# Generated content mirrors
+scripts/
+drafts/
+
+# Superpower
+*.superpowers

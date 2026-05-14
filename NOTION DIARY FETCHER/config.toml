@@ -23,7 +23,7 @@ base_url = "http://localhost:11434"
 default_model = "gemma-32k:latest"
 
 [content_writer]
-ollama_model = "gemma4:e2b"
+ollama_model = "gemma-32k:latest"
 ollama_host = "http://localhost:11434"
 max_source_chars = 12000
 default_story_limit = 20
@@ -55,3 +55,7 @@ short_reel_threshold_sec = 15
 log_dir        = "logs"   # relative to repo root (personal_brand/)
 level          = "INFO"
 retention_days = 7
+
+[md_mirror]
+scripts_dir = "scripts"
+drafts_dir  = "drafts"

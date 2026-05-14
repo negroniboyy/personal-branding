@@ -1,7 +1,8 @@
 framework_id: AUTO_GENERATE
 creator: unknown
 channel: linkedin
-source_file: 3.txt
+description: "Reframe an entrepreneurship myth with a personal 'I used to think' opener, identify the structural mistake, then present a Person + Problem framework with action-oriented questions; best for founders and niche posts."
+source_file: "'I Used to Think' -> Person/Problem Niche"
 structure:
 - makes an initial comparative statement (lightbulb moment vs. process)
 - identifies a common, structural mistake (Product before Person)

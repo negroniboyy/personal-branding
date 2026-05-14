@@ -25,6 +25,7 @@ class Framework:
     cta: str
     argument_pattern: str
     fits_topics: list[str]
+    description: str = ""
     score: float = 0.0  # computed ranking score
 
 

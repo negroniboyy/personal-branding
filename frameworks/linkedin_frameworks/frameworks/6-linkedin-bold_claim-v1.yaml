@@ -1,7 +1,8 @@
 framework_id: AUTO_GENERATE
 creator: unknown
 channel: linkedin
-source_file: linkedin_post_analysis
+description: "State the customer-understanding advantage upfront, tease 5 overlooked tactics, then shift into a soft-sell; best for marketing, branding, and audience-positioning posts."
+source_file: "5 Overlooked Tactics -> Webinar Soft-Sell"
 structure:
 - Makes a bold, general thesis statement.
 - Teases specific, high-value content ("Here are 5 overlooked ways...").

@@ -70,6 +70,7 @@ def init_db(conn: sqlite3.Connection) -> None:
             transcript_text   TEXT NOT NULL,
             visual_notes      TEXT DEFAULT '',
             performance_notes TEXT DEFAULT '',
+            description       TEXT DEFAULT '',
             yaml_path         TEXT NOT NULL,
             created_at        TEXT NOT NULL
         );
@@ -351,8 +352,8 @@ def insert_db_row(
                 cta_type, cta_verbal, fits_topics,
                 transcript_json, transcript_text,
                 visual_notes, performance_notes,
-                yaml_path, created_at
-            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                description, yaml_path, created_at
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """, (
             framework_id,
             _s(data.get("creator", "unknown")),
@@ -374,6 +375,7 @@ def insert_db_row(
             full_text,
             "",
             _s(data.get("performance_notes", "")),
+            _s(data.get("description", "")),
             str(yaml_path),
             now,
         ))

@@ -1,7 +1,8 @@
 framework_id: AUTO_GENERATE
 creator: unknown
 channel: linkedin
-source_file: unknown_source
+description: "Open with a specific bold claim about an AI or developer tool, present a 4-principle framework in numbered sections with usage instructions, end with an aha moment; best for AI, LLM, and agentic-workflow posts."
+source_file: "AI Tool Claim -> 4 Principles + Aha"
 structure:
 - sets the stage by referencing industry experts' observations on LLM failures
 - introduces a structured framework solution (4 principles)

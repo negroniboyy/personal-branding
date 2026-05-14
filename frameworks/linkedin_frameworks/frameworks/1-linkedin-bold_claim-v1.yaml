@@ -1,7 +1,8 @@
 framework_id: AUTO_GENERATE
 creator: unknown
 channel: linkedin
-source_file: linkedin_post
+description: "Open with a bold career thesis, deliver 5 numbered lessons in listicle form, anchor with a short anecdote, close with a memorable mantra; ideal for mindset, resilience, and leadership posts."
+source_file: "Career Thesis -> 5 Lessons + Anecdote"
 structure:
 - opens with a high-level, assertive thesis statement
 - transitions by introducing a structured list ("5 mental models")

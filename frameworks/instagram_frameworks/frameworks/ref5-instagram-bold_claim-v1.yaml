@@ -1,0 +1,60 @@
+framework_id: AUTO_GENERATE
+creator: unknown
+channel: instagram_reel
+description: "Hook with a playful personal-story opener, build a tech-meets-relationships concept through a pitch arc, close with a soft audience question; best for technology, dating, and app-building Reels."
+source_file: "Personal Story -> App Pitch Arc"
+hook:
+  type: bold_claim
+  first_line: Flaw! I'm building an app.
+structure:
+- beat: story_setup
+  start_sec: 0.0
+  end_sec: 16.28
+  description: 'The speaker tells a personal story about a party, describing a girl
+    he was interested in.  He recounts his awkward failure to talk to her, which leads
+    him to feel disappointed.
+
+    '
+- beat: problem_identification
+  start_sec: 16.28
+  end_sec: 39.52
+  description: 'He processes the failed encounter and realizes that while he can''t
+    talk to girls,  his technical skill in computer science allows him to "build cool
+    shit."
+
+    '
+- beat: conflict_build
+  start_sec: 39.52
+  end_sec: 52.0
+  description: 'He proposes building a dating app for the girl. He addresses and refutes  general
+    critiques of dating apps, questioning how his idea would differ from existing
+    platforms.
+
+    '
+- beat: solution_pitch
+  start_sec: 54.28
+  end_sec: 71.12
+  description: 'He presents his unique solution: a "mutual zone" app limited to friends
+    and their friends,  solving the "stranger" problem inherent in existing dating
+    platforms.
+
+    '
+- beat: conclusion_cta
+  start_sec: 71.12
+  end_sec: 83.0
+  description: 'He summarizes the idea, asking for feedback on the concept and inviting
+    potential co-builders to join the project.
+
+    '
+pacing: medium
+tone: conversational
+cta:
+  type: question
+  verbal: Let me know if you like the idea.
+fits_topics:
+- dating
+- technology
+- relationships
+- friendships
+- mobile-apps
+performance_notes: ''

@@ -1,7 +1,8 @@
 framework_id: AUTO_GENERATE
 creator: unknown
 channel: linkedin
-source_file: linkedin_post_01
+description: "Hook with the pain of overwork, deliver a specific script or professional template as the fix, then close with a sharp business thesis; best for business, communication, and execution posts."
+source_file: "Overwork Pain -> Script Template + Thesis"
 structure:
 - provides a specific script/template for a professional interaction
 - delivers a sharp, authoritative thesis statement about business failure

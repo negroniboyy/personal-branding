@@ -37,3 +37,32 @@ export async function fetchDraft(id) {
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res.json()
 }
+
+export async function patchDraft(id, generated_text) {
+  const res = await fetch(`${BASE}/content-writer/drafts/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ generated_text }),
+  })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json()
+}
+
+export async function deleteDraft(id) {
+  const res = await fetch(`${BASE}/content-writer/drafts/${id}`, { method: "DELETE" })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json()
+}
+
+export async function openDraftsFolder() {
+  const res = await fetch(`${BASE}/content-writer/open-folder`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({}),
+  })
+  if (!res.ok) {
+    const detail = await res.json().catch(() => ({}))
+    throw new Error(detail.detail || `HTTP ${res.status}`)
+  }
+  return res.json()
+}

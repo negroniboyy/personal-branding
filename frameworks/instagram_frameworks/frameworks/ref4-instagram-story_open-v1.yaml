@@ -1,0 +1,57 @@
+framework_id: AUTO_GENERATE
+creator: unknown
+channel: instagram_reel
+description: "Open with a relatable personal story about feeling lost, introduce a simple two-question decision framework, and walk through all four outcome quadrants; great for career, self-doubt, and personal-development Reels."
+source_file: "Lost in 20s -> 2-Question Quadrant"
+hook:
+  type: story_open
+  first_line: the late bloomer who spent my entire 20s feeling lost and overwhelmed.
+structure:
+- beat: hook_setup
+  start_sec: 0.0
+  end_sec: 3.28
+  description: the late bloomer who spent my entire 20s feeling lost and overwhelmed.
+- beat: framework_intro
+  start_sec: 3.28
+  end_sec: 7.92
+  description: Here's the framework I wish I'd had. Two questions, that's it. Question
+    one, do I want this? Question two, am I making progress?
+- beat: framework_utility
+  start_sec: 7.92
+  end_sec: 16.96
+  description: This works for a job, a relationship, a degree, anything you're trying
+    to figure out. If you're here, both yes. This is a good sign. Keep going.
+- beat: scenario_stuck
+  start_sec: 16.96
+  end_sec: 29.04
+  description: If you're here, want it, but no progress, you're stuck. This is school,
+    long programs, anywhere feedback is delayed. Find a way to make your progress
+    visible. And here, you're making progress, but you don't want it. This is a clear
+    no.
+- beat: scenario_must_quit
+  start_sec: 29.04
+  end_sec: 37.28
+  description: If you stay, you will torment yourself wondering what else you can
+    be doing. And here, you don't want it, and there's no progress. This is an easy
+    no. Let it go.
+- beat: pivot_reflection
+  start_sec: 37.28
+  end_sec: 43.92
+  description: Anytime I felt lost, I was waiting to feel certain. You don't have
+    to. If you feel lost or are figuring out what to do next,
+- beat: actionable_advice
+  start_sec: 43.92
+  end_sec: 50.32
+  description: start with your curiosities. The things that make you lose track of
+    time. The things that won't leave you alone. That's where it starts.
+pacing: medium
+tone: conversational
+cta:
+  type: none
+  verbal: ''
+performance_notes: ''
+fits_topics:
+- career
+- self-doubt
+- personal-development
+- decision-making

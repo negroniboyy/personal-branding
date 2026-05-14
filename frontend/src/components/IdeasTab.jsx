@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { fetchIdeas, createIdea } from "../ideasApi.js"
+import { fetchIdeas, createIdea, deleteIdea } from "../ideasApi.js"
 import IdeaDetail from "./IdeaDetail.jsx"
 import GlassPanel from "./ui/GlassPanel.jsx"
 import Icon from "./ui/Icon.jsx"
@@ -11,6 +11,7 @@ export default function IdeasTab() {
   const [search, setSearch] = useState("")
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [deletingId, setDeletingId] = useState(null)
 
   const loadIdeas = useCallback(async () => {
     try {
@@ -46,6 +47,21 @@ export default function IdeasTab() {
 
   const handleIdeaUpdated = (updated) => {
     setIdeas(prev => prev.map(i => i.id === updated.id ? { ...i, ...updated } : i))
+  }
+
+  const handleDeleteIdea = async (e, ideaId) => {
+    e.stopPropagation()
+    if (!window.confirm("Delete this idea and all its drafts?")) return
+    setDeletingId(ideaId)
+    try {
+      await deleteIdea(ideaId)
+      setIdeas(prev => prev.filter(i => i.id !== ideaId))
+      if (selectedId === ideaId) setSelectedId(null)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setDeletingId(null)
+    }
   }
 
   const filtered = ideas.filter(i =>
@@ -110,38 +126,48 @@ export default function IdeasTab() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.04 }}
                 >
-                  <button
-                    onClick={() => setSelectedId(idea.id)}
-                    className={`relative w-full text-left px-4 py-3 rounded-lg transition-all ${
-                      isActive ? "bg-white shadow-sm" : "hover:bg-white/60"
-                    }`}
-                  >
-                    {isActive && (
-                      <motion.div
-                        layoutId="activeIdeaPill"
-                        className="absolute inset-0 rounded-lg"
-                        style={{
-                          background: "linear-gradient(90deg, rgba(70,72,212,0.08) 0%, rgba(129,39,207,0.08) 100%)",
-                          border: "1px solid rgba(70,72,212,0.12)",
-                        }}
-                        transition={{ type: "spring", stiffness: 400, damping: 35 }}
-                      />
-                    )}
-                    <div className="relative z-10">
-                      <p className={`font-body text-body truncate ${isActive ? "text-primary" : "text-on-surface"}`}>
-                        {idea.title || <span className="italic text-on-surface-variant">Untitled</span>}
-                      </p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="font-label-caps text-[10px] text-on-surface-variant">
-                          {idea.draft_count} {idea.draft_count === 1 ? "draft" : "drafts"}
-                        </span>
-                        <span className="text-outline-variant">·</span>
-                        <span className="font-label-caps text-[10px] text-on-surface-variant">
-                          {formatRecency(idea.updated_at)}
-                        </span>
+                  <div className="group relative">
+                    <button
+                      onClick={() => setSelectedId(idea.id)}
+                      className={`relative w-full text-left px-4 py-3 rounded-lg transition-all ${
+                        isActive ? "bg-white shadow-sm" : "hover:bg-white/60"
+                      }`}
+                    >
+                      {isActive && (
+                        <motion.div
+                          layoutId="activeIdeaPill"
+                          className="absolute inset-0 rounded-lg"
+                          style={{
+                            background: "linear-gradient(90deg, rgba(70,72,212,0.08) 0%, rgba(129,39,207,0.08) 100%)",
+                            border: "1px solid rgba(70,72,212,0.12)",
+                          }}
+                          transition={{ type: "spring", stiffness: 400, damping: 35 }}
+                        />
+                      )}
+                      <div className="relative z-10 pr-7">
+                        <p className={`font-body text-body truncate ${isActive ? "text-primary" : "text-on-surface"}`}>
+                          {idea.title || <span className="italic text-on-surface-variant">Untitled</span>}
+                        </p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="font-label-caps text-[10px] text-on-surface-variant">
+                            {idea.draft_count} {idea.draft_count === 1 ? "draft" : "drafts"}
+                          </span>
+                          <span className="text-outline-variant">·</span>
+                          <span className="font-label-caps text-[10px] text-on-surface-variant">
+                            {formatRecency(idea.updated_at)}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  </button>
+                    </button>
+                    <button
+                      onClick={(e) => handleDeleteIdea(e, idea.id)}
+                      disabled={deletingId === idea.id}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 z-20 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded text-outline-variant hover:text-error hover:bg-error/10 disabled:opacity-30"
+                      title="Delete idea"
+                    >
+                      <Icon name={deletingId === idea.id ? "sync" : "delete"} size={14} className={deletingId === idea.id ? "animate-spin" : ""} />
+                    </button>
+                  </div>
                 </motion.div>
               )
             })

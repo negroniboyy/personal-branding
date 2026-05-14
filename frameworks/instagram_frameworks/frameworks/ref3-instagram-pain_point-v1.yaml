@@ -1,0 +1,68 @@
+framework_id: AUTO_GENERATE
+creator: unknown
+channel: instagram_reel
+description: "Open with a vulnerability-first pain point about fear of visibility, escalate the internal struggle, then pivot to tolerance-building insight; ideal for content-creation, confidence, and self-improvement Reels."
+source_file: "Visibility Fear -> Tolerance Pivot"
+hook:
+  type: pain_point
+  first_line: If starting content creation feels impossible right now, this is for
+    you.
+structure:
+- beat: hook
+  start_sec: 0.0
+  end_sec: 3.28
+  description: If starting content creation feels impossible right now, this is for
+    you.
+- beat: context_setting
+  start_sec: 3.28
+  end_sec: 8.64
+  description: And yes, this is shot entirely for my phone. I pressed record because
+    I didn't want to feel alone in this journey anymore.
+- beat: conflict_build
+  start_sec: 8.64
+  end_sec: 15.68
+  description: People say they're scared of being bad on camera, but that's not it.
+    The real fear is being seen before you're ready, before you know what the hell
+    you're doing,
+- beat: pain_point_escalation
+  start_sec: 15.68
+  end_sec: 26.48
+  description: and where this is even going. It was never about the camera. It was
+    the moment you imagined hitting post and somebody who knows your past might see
+    it, and strangers might judge it, and you might look completely ridiculous to
+    both.
+- beat: peak_struggle
+  start_sec: 26.48
+  end_sec: 38.32
+  description: That's why I spent over six months lying in bed, scrolling, saving,
+    and convincing myself I was just getting ready, while watching everyone else post
+    and feeling worse every time I didn't. And it's not because I didn't know what
+    to do. It was because being visible meant risking being wrong in public.
+- beat: pivot
+  start_sec: 38.32
+  end_sec: 44.32
+  description: So what helped me was in confidence. It was realizing that everyone
+    I admire started awkward, unsure, and figured it out in public.
+- beat: insight
+  start_sec: 49.2
+  end_sec: 56.72
+  description: And the people quickest to judge? They're usually still figuring themselves
+    out too. We don't get rid of the fear first. We just build tolerance for it.
+- beat: conclusion
+  start_sec: 56.72
+  end_sec: 66.72
+  description: And if you're still here feeling this right now, it's just part of
+    the process. And sometimes the only next step is pressing record anyway. See you
+    at the next reminder.
+pacing: fast
+tone: conversational
+cta:
+  type: none
+  verbal: ''
+fits_topics:
+- fear
+- content_creation
+- confidence
+- visibility
+- self-improvement
+performance_notes: ''

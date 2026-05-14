@@ -61,6 +61,7 @@ def init_db():
             performance_notes TEXT,
             raw_excerpt     TEXT NOT NULL,
             yaml_path       TEXT NOT NULL,
+            description     TEXT DEFAULT '',
             created_at      TEXT NOT NULL
         )
     """)
@@ -286,8 +287,8 @@ def insert_db_row(framework_id: str, data: dict, yaml_path: Path) -> bool:
                 cta_type, cta_example,
                 fits_topics,
                 performance_notes,
-                raw_excerpt, yaml_path, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                raw_excerpt, yaml_path, description, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             framework_id,
             _s(data.get("creator", "unknown")),
@@ -305,6 +306,7 @@ def insert_db_row(framework_id: str, data: dict, yaml_path: Path) -> bool:
             _s(data.get("performance_notes", "")),
             _s(data.get("raw_excerpt", "")),
             str(yaml_path),
+            _s(data.get("description", "")),
             now,
         ))
         conn.commit()

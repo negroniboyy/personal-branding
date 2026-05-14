@@ -18,6 +18,7 @@ import extract_reel
 import llm_client
 import script_writer
 from shared.logger import get_logger
+from shared.md_mirror import delete_script_md, write_script_md
 
 logger = get_logger("instagram_frameworks")
 
@@ -40,6 +41,10 @@ class GenerateRequestBody(BaseModel):
     story_node_id: str
     framework_id: str
     idea_prompt: Optional[str] = None
+
+
+class PatchScriptBody(BaseModel):
+    generated_text: str
 
 
 def _db() -> sqlite3.Connection:
@@ -112,13 +117,25 @@ def generate(body: GenerateRequestBody):
             "SELECT created_at FROM reel_scripts WHERE id = ?",
             (script_id,),
         ).fetchone()
+        created_at = created_row["created_at"] if created_row else None
+        try:
+            write_script_md({
+                "id": script_id,
+                "story_node_id": body.story_node_id,
+                "framework_id": body.framework_id,
+                "model_used": model_used,
+                "created_at": created_at,
+                "generated_text": text,
+            })
+        except Exception as e:
+            logger.warning("write_script_md failed for id=%s: %s", script_id, e)
         return {
             "script_id": script_id,
             "generated_text": text,
             "story_node_id": body.story_node_id,
             "framework_id": body.framework_id,
             "model_used": model_used,
-            "created_at": created_row["created_at"] if created_row else None,
+            "created_at": created_at,
         }
     finally:
         conn.close()
@@ -150,6 +167,62 @@ def get_script(script_id: int):
         return dict(row)
     finally:
         conn.close()
+
+
+@router.patch("/scripts/{script_id}")
+def patch_script(script_id: int, body: PatchScriptBody):
+    conn = _db()
+    try:
+        row = conn.execute("SELECT * FROM reel_scripts WHERE id = ?", (script_id,)).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail=f"reel_script {script_id} not found")
+        conn.execute(
+            "UPDATE reel_scripts SET generated_text = ? WHERE id = ?",
+            (body.generated_text, script_id),
+        )
+        conn.commit()
+        updated = dict(conn.execute("SELECT * FROM reel_scripts WHERE id = ?", (script_id,)).fetchone())
+        try:
+            write_script_md(updated)
+        except Exception as e:
+            logger.warning("write_script_md failed on patch id=%s: %s", script_id, e)
+        return updated
+    finally:
+        conn.close()
+
+
+@router.delete("/scripts/{script_id}")
+def delete_script(script_id: int):
+    conn = _db()
+    try:
+        row = conn.execute("SELECT id FROM reel_scripts WHERE id = ?", (script_id,)).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail=f"reel_script {script_id} not found")
+        conn.execute("DELETE FROM reel_scripts WHERE id = ?", (script_id,))
+        conn.commit()
+        try:
+            delete_script_md(script_id)
+        except Exception as e:
+            logger.warning("delete_script_md failed for id=%s: %s", script_id, e)
+        return {"ok": True}
+    finally:
+        conn.close()
+
+
+@router.post("/open-scripts-folder")
+def open_scripts_folder():
+    from shared.md_mirror import _load_dirs
+    scripts_dir, _ = _load_dirs()
+    scripts_dir.mkdir(parents=True, exist_ok=True)
+    plat = sys.platform
+    if plat == "darwin":
+        subprocess.Popen(["open", str(scripts_dir)])
+    elif plat.startswith("linux"):
+        subprocess.Popen(["xdg-open", str(scripts_dir)])
+    else:
+        raise HTTPException(status_code=501, detail=f"open-folder not supported on {plat}")
+    logger.info("opened scripts folder at %s", scripts_dir)
+    return {"opened": True, "path": str(scripts_dir)}
 
 
 @router.post("/open-references")

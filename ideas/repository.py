@@ -1,6 +1,6 @@
 import sqlite3
 from typing import Optional
-from models import Idea, IdeaDraft
+from .models import Idea, IdeaDraft
 
 
 def run_migration(conn: sqlite3.Connection) -> None:
@@ -111,3 +111,40 @@ def link_draft(conn: sqlite3.Connection, draft_id: int, idea_id: str) -> None:
 def link_reel(conn: sqlite3.Connection, script_id: int, idea_id: str) -> None:
     conn.execute("UPDATE reel_scripts SET idea_id = ? WHERE id = ?", (idea_id, script_id))
     conn.commit()
+
+
+def delete_idea_cascade(conn: sqlite3.Connection, idea_id: str) -> dict:
+    """Delete idea and all linked drafts/scripts in one transaction. Returns counts."""
+    with conn:
+        drafts_removed = conn.execute(
+            "DELETE FROM content_drafts WHERE idea_id = ?", (idea_id,)
+        ).rowcount
+        scripts_removed = conn.execute(
+            "DELETE FROM reel_scripts WHERE idea_id = ?", (idea_id,)
+        ).rowcount
+        ideas_removed = conn.execute(
+            "DELETE FROM ideas WHERE id = ?", (idea_id,)
+        ).rowcount
+    return {
+        "deleted": ideas_removed > 0,
+        "drafts_removed": drafts_removed,
+        "scripts_removed": scripts_removed,
+    }
+
+
+def delete_linkedin_draft(conn: sqlite3.Connection, idea_id: str, draft_id: int) -> bool:
+    """Delete a single LinkedIn draft scoped to its parent idea."""
+    with conn:
+        rowcount = conn.execute(
+            "DELETE FROM content_drafts WHERE id = ? AND idea_id = ?", (draft_id, idea_id)
+        ).rowcount
+    return rowcount > 0
+
+
+def delete_reel_script(conn: sqlite3.Connection, idea_id: str, script_id: int) -> bool:
+    """Delete a single Reel script scoped to its parent idea."""
+    with conn:
+        rowcount = conn.execute(
+            "DELETE FROM reel_scripts WHERE id = ? AND idea_id = ?", (script_id, idea_id)
+        ).rowcount
+    return rowcount > 0
