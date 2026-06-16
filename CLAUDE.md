@@ -1,12 +1,15 @@
 # CLAUDE.md - Root Guardrails
-Always start session looking for a md/checkpoint.md
-Every time you're switching models, you have to notify the user
 
-Every time you're following any protocol from this CLAUDE.md notify the user in a striaght forwards manner
+## 🚀 0. SESSION BOOTSTRAP (do this FIRST, every session)
+Before any other work, read these memory files if they exist (skip silently if absent):
+1. `md/checkpoint.md` — live session state (status, file map, next steps).
+2. `md/code_index.md` — live code index (file → role / key symbols).
 
-DO NOT install anything that constaind axios 1.14.1 or 0.30.4
+These are **live documents**: update them in place via `/session-checkpoint`, never append.
+Notify the user briefly when you've loaded them.
 
-DO NOT create markdown files that exceed 12KB in size (split into multiple files if needed)
+Every time you're switching models, you have to notify the user.
+Every time you're following any protocol from this CLAUDE.md, notify the user in a straightforward manner.
 
 ## 🤖 1. MODEL ROUTING
 | Phase | Model | Primary Directive |
@@ -20,19 +23,9 @@ DO NOT create markdown files that exceed 12KB in size (split into multiple files
 At the end of Planning, generate `handoff/blueprint_v[X.X]_[feature].md`.
 **Must include:**
 - **State:** Current repo summary + affected file list.
-- **Logic:** Signatures + data flow only. NO function bodies. NO full implementations. Max ~500 tokens per module. Local LLM writes the actual code from these specs.
+- **Logic:** Pseudo-code/Flow-logic (Model-agnostic for Gemma/Codex).
 - **Specs:** Python 3.12 (uv), Textual TUI, React logic centralization.
 - **Goal:** Clear "Definition of Done" for the Execution model.
-- **User Verification Section:** At the end, include explicit checklist with "⚠️ User Verification Report" — ask user to check each item and report what failed or is missing before proceeding to next milestone.
-
-**Blueprint Logic format (per module):**
-```
-module.py — one-line responsibility
-  Functions: name(args) -> return_type
-  Key rules: bullet constraints (e.g. rate limit, idempotency)
-  Calls: what it imports/calls from other modules
-```
-**Hard limit:** Each blueprint part must fit in local LLM context (<5KB). Split into p1/p2/p3 if needed.
 
 ## 🛰 3. SUB-AGENT PRE-FLIGHT (Haiku Default)
 Before spawning sub-agents for parallel tasks:
@@ -51,28 +44,3 @@ Before spawning sub-agents for parallel tasks:
 - **Threshold:** At **50% context**, stop and trigger `/skill/session-checkpoint`.
 - **Handoff:** Use the latest Blueprint to resume in a fresh session.
 - **Exclusion:** Strictly follow `.claudeignore` (Builds, Node_Modules, `handoff/` history).
-
-## 🎯 6. LOCAL LLM HANDOFF PROTOCOL
-**Claude Code role:** Planning, review, validation only. NOT code execution.  
-**Gemma4 e2b role:** Reads Blueprint, writes all code.  
-**Workflow:**
-1. **Plan phase (Opus 4.7):** Ask clarifications, build Blueprint in `handoff/blueprint_vX.X_[feature].md`
-2. **Approval gate:** Present Blueprint to user; wait for explicit "execute" or "hand off" approval
-3. **Handoff (never auto-execute):** User copies Blueprint to Gemma4 e2b context; Gemma4 writes code
-4. **Review phase (Haiku):** I validate Gemma4's output against Definition of Done, run tests, report gaps
-5. **Iterate:** If Gemma4 misses items, loop back to step 3 with corrected Blueprint
-
-**CRITICAL:** Do NOT write code yourself. If user says "go", ask: "Should I hand this off to Gemma4, or would you like me to code this milestone?" Always default to Gemma4 handoff unless explicitly told otherwise.
-
-## 📋 7. LOGGER GOVERNANCE
-All Python logging uses `from shared.logger import get_logger` — one call per file, at module top, never inside functions.
-
-**Rules:**
-- Subsystem names: `narrative_warehouse`, `instagram_frameworks`, `linkedin_frameworks`
-- Log files land in `logs/{subsystem}.log` at repo root (`personal_brand/logs/`); auto-purged after 7 days
-- Config in `NOTION DIARY FETCHER/config.toml` under `[logger]` (log_dir, level, retention_days)
-- Never call `logging.basicConfig()` — it conflicts with the shared logger
-- Never use `print(..., file=sys.stderr)` for errors — use `logger.error()` or `logger.warning()`
-- `print()` is acceptable for intentional CLI terminal UX (progress, dry-run prompts, summaries)
-- New subsystem: pick a `snake_case` name, call `get_logger("name")`, add to the list above
-- `shared` package lives at `personal_brand/shared/shared/logger.py`; installed via `uv sync` in `NOTION DIARY FETCHER/`

@@ -6,13 +6,12 @@ import GlassPanel from "./ui/GlassPanel.jsx"
 import Icon from "./ui/Icon.jsx"
 
 const PER_PAGE = 20
+const MIN_SCORE = 0.8
 
-export default function StoryNodeList() {
+export default function StoryNodeList({ onCreate }) {
   const [nodes, setNodes] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [minScore, setMinScore] = useState(0)
-  const [narrativeFlag, setNarrativeFlag] = useState("All")
   const [search, setSearch] = useState("")
   const [sort, setSort] = useState("score")
   const [page, setPage] = useState(0)
@@ -21,7 +20,7 @@ export default function StoryNodeList() {
     setLoading(true)
     setError(null)
     try {
-      const all = await fetchAllStoryNodes(minScore)
+      const all = await fetchAllStoryNodes(MIN_SCORE)
       setNodes(all)
     } catch (e) {
       setError(e.message)
@@ -30,10 +29,9 @@ export default function StoryNodeList() {
     }
   }
 
-  useEffect(() => { load() }, [minScore])
+  useEffect(() => { load() }, [])
 
   const filtered = nodes.filter(n => {
-    if (narrativeFlag !== "All" && n.narrative_flag !== narrativeFlag) return false
     if (search) {
       const q = search.toLowerCase()
       return (
@@ -58,34 +56,9 @@ export default function StoryNodeList() {
     <div className="flex flex-col gap-4">
       {/* Filters bar */}
       <GlassPanel className="rounded-xl p-card_padding flex flex-wrap gap-4 items-center">
-        {/* Min score */}
-        <div className="flex items-center gap-3">
-          <span className="font-label-caps text-label-caps text-on-surface-variant">MIN SCORE</span>
-          <input
-            type="range" min="0" max="1" step="0.01"
-            value={minScore}
-            onChange={e => { setMinScore(parseFloat(e.target.value)); setPage(0) }}
-            className="w-24 accent-primary"
-          />
-          <span className="font-label-caps text-label-caps text-primary min-w-[36px]">{minScore.toFixed(2)}</span>
-        </div>
-
-        {/* Flag filter */}
-        <div className="flex gap-1">
-          {[["All", "All"], ["Normal", "Normal"], ["Low Narrative Potential", "Low"]].map(([value, label]) => (
-            <button
-              key={value}
-              onClick={() => { setNarrativeFlag(value); setPage(0) }}
-              className={`px-3 py-1.5 rounded-lg font-label-caps text-label-caps transition-all ${
-                narrativeFlag === value
-                  ? "bg-primary text-on-primary"
-                  : "glass-panel text-on-surface-variant hover:text-on-surface"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+        <span className="font-label-caps text-label-caps text-primary bg-primary/5 border border-primary/10 px-2 py-1 rounded">
+          SCORE ≥ 0.80
+        </span>
 
         {/* Search */}
         <div className="relative flex-1 min-w-[180px]">
@@ -139,7 +112,7 @@ export default function StoryNodeList() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: i * 0.03 }}
         >
-          <StoryNodeCard node={node} onUpdate={handleUpdate} />
+          <StoryNodeCard node={node} onUpdate={handleUpdate} onCreate={onCreate} />
         </motion.div>
       ))}
 

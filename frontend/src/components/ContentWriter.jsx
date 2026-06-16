@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   fetchFrameworks,
@@ -13,8 +13,13 @@ import {
 import GlassPanel from "./ui/GlassPanel.jsx"
 import PrimaryButton from "./ui/PrimaryButton.jsx"
 import Icon from "./ui/Icon.jsx"
+import DomainChips from "./DomainChips.jsx"
+import StoryPreview from "./StoryPreview.jsx"
+import { ModelSelector } from "./ModelSelector.jsx"
+import { DOMAINS } from "../lib/domains.js"
+import { frameworkLabel } from "../lib/frameworkLabel.js"
 
-export default function ContentWriter() {
+export default function ContentWriter({ initialStory }) {
   const [stories, setStories] = useState([])
   const [frameworks, setFrameworks] = useState([])
   const [selectedStoryId, setSelectedStoryId] = useState(null)
@@ -30,42 +35,58 @@ export default function ContentWriter() {
   const [deletingId, setDeletingId] = useState(null)
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState(null)
+  const [domain, setDomain] = useState(null)
+  const [selectedModel, setSelectedModel] = useState("openai/gpt-oss-120b:free")
+  const appliedInitial = useRef(false)
 
-  const loadRecommendations = useCallback(async (idea) => {
+  const loadRecommendations = useCallback(async (idea, activeDomain) => {
     setLoadingRecs(true)
     setError(null)
     try {
-      const data = await postRecommendations({ idea_prompt: idea || null, top_n: 5 })
-      setStories(data.stories || [])
-      setFrameworks(data.frameworks || [])
-      if (!manualOverride) {
-        if (data.stories.length > 0) setSelectedStoryId(data.stories[0].id)
-        if (data.frameworks.length > 0) setSelectedFrameworkId(data.frameworks[0].id)
+      const data = await postRecommendations({ idea_prompt: idea || null, top_n: 200, domain: activeDomain ?? null })
+      let storyList = data.stories || []
+      const pinInitial = initialStory && !appliedInitial.current
+      if (pinInitial && !storyList.some(s => String(s.id) === String(initialStory.id))) {
+        storyList = [initialStory, ...storyList]
       }
+      setStories(storyList)
+      setFrameworks(data.frameworks || [])
+      if (pinInitial) {
+        setSelectedStoryId(initialStory.id)
+        appliedInitial.current = true
+      } else if (!manualOverride && storyList.length > 0) {
+        setSelectedStoryId(storyList[0].id)
+      }
+      if (!manualOverride && data.frameworks.length > 0) setSelectedFrameworkId(data.frameworks[0].id)
       setManualOverride(false)
     } catch (e) {
       setError(e.message)
     } finally {
       setLoadingRecs(false)
     }
-  }, [manualOverride])
+  }, [manualOverride, initialStory])
 
   const loadDrafts = async () => {
     try { setDrafts(await fetchDrafts()) } catch { /* non-blocking */ }
   }
 
-  useEffect(() => { loadRecommendations(""); loadDrafts() }, [])
+  useEffect(() => { loadRecommendations("", null); loadDrafts() }, [])
+
+  const isFreeform = selectedStoryId === "__none__"
+  const canGenerate = selectedFrameworkId && (isFreeform ? ideaPrompt.trim() : selectedStoryId)
 
   const handleGenerate = async () => {
-    if (!selectedStoryId || !selectedFrameworkId) return
+    if (!canGenerate) return
     setGenerating(true)
     setError(null)
     setActiveDraft(null)
     try {
       const result = await postGenerate({
-        story_node_id: selectedStoryId,
+        story_node_id: isFreeform ? null : selectedStoryId,
         framework_id: selectedFrameworkId,
         idea_prompt: ideaPrompt || null,
+        model: selectedModel,
+        provider: selectedModel.startsWith("ollama:") ? "ollama" : "openrouter",
       })
       setActiveDraft(result)
       setEditedText(result.generated_text)
@@ -132,8 +153,8 @@ export default function ContentWriter() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const selectedStory = stories.find(s => s.id === selectedStoryId)
-  const selectedFramework = frameworks.find(f => f.id === selectedFrameworkId)
+  const selectedStory = stories.find(s => String(s.id) === String(selectedStoryId))
+  const selectedFramework = frameworks.find(f => String(f.id) === String(selectedFrameworkId))
 
   return (
     <div className="flex flex-col gap-8 relative">
@@ -154,6 +175,16 @@ export default function ContentWriter() {
           />
         </GlassPanel>
 
+        {/* Domain filter */}
+        <DomainChips
+          domains={DOMAINS}
+          selected={domain}
+          onChange={(d) => {
+            setDomain(d)
+            loadRecommendations(ideaPrompt, d)
+          }}
+        />
+
         {/* Story + Framework pickers */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex flex-col gap-2">
@@ -163,36 +194,28 @@ export default function ContentWriter() {
               onChange={e => { setSelectedStoryId(e.target.value); setManualOverride(true) }}
               className="glass-panel rounded-lg px-4 py-3 font-body text-body text-on-surface appearance-none focus:border-primary outline-none border-black/5"
             >
-              {stories.length === 0 && <option value="">No stories loaded</option>}
+              <option value="__none__">— No story (use idea only) —</option>
               {stories.map(s => (
                 <option key={s.id} value={s.id}>
                   {(s.title || s.conflict_node || s.id).replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase())}
                 </option>
               ))}
             </select>
-            {selectedStory && (
-              <p className="font-label-caps text-[10px] text-on-surface-variant px-1">{selectedStory.conflict_node}</p>
+            {isFreeform && (
+              <p className="font-label-caps text-[10px] text-primary px-1">Idea hint is required — will be used as source</p>
             )}
           </div>
           <div className="flex flex-col gap-2">
             <label className="font-label-caps text-label-caps text-on-surface-variant">FRAMEWORK</label>
             <select
               value={selectedFrameworkId ?? ""}
-              onChange={e => { setSelectedFrameworkId(Number(e.target.value)); setManualOverride(true) }}
+              onChange={e => { setSelectedFrameworkId(e.target.value); setManualOverride(true) }}
               className="glass-panel rounded-lg px-4 py-3 font-body text-body text-on-surface appearance-none focus:border-primary outline-none border-black/5"
             >
               {frameworks.length === 0 && <option value="">No frameworks loaded</option>}
-              {frameworks.map(f => {
-                const title = f.name || f.id
-                const meta = [f.hook_type, f.tone, f.cta].filter(Boolean).map(s =>
-                  s.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())
-                ).join(" · ")
-                return (
-                  <option key={f.id} value={f.id}>
-                    {meta ? `${title} — ${meta}` : title}
-                  </option>
-                )
-              })}
+              {frameworks.map(f => (
+                <option key={f.id} value={f.id}>{frameworkLabel(f, "linkedin")}</option>
+              ))}
             </select>
             {selectedFramework && (
               <p className="font-label-caps text-[10px] text-on-surface-variant px-1">{selectedFramework.hook_type} · {selectedFramework.tone}</p>
@@ -200,10 +223,13 @@ export default function ContentWriter() {
           </div>
         </div>
 
+        {/* Selected story preview */}
+        {!isFreeform && selectedStory && <StoryPreview story={selectedStory} />}
+
         {/* Actions row */}
-        <div className="flex gap-3 flex-wrap">
+        <div className="flex gap-3 flex-wrap items-center">
           <motion.button
-            onClick={() => loadRecommendations(ideaPrompt)}
+            onClick={() => loadRecommendations(ideaPrompt, domain)}
             disabled={loadingRecs}
             whileTap={{ scale: 0.98 }}
             className="flex-1 glass-panel text-primary py-3 px-5 rounded-xl font-label-caps text-label-caps flex items-center justify-center gap-2 hover:bg-white transition-colors border-primary/20 disabled:opacity-40"
@@ -211,9 +237,14 @@ export default function ContentWriter() {
             <Icon name={loadingRecs ? "sync" : "auto_awesome"} size={16} />
             {loadingRecs ? "Loading..." : "Get Recommendations"}
           </motion.button>
+          <ModelSelector
+            task="generate_linkedin_post"
+            value={selectedModel}
+            onChange={setSelectedModel}
+          />
           <PrimaryButton
             onClick={handleGenerate}
-            disabled={generating || !selectedStoryId || !selectedFrameworkId}
+            disabled={generating || !canGenerate}
             icon={generating ? "hourglass_top" : "temp_preferences_custom"}
             className="flex-1"
           >
@@ -310,13 +341,18 @@ export default function ContentWriter() {
               </div>
 
               {activeDraft && (
-                <div className="absolute bottom-4 right-6 flex items-center gap-3">
+                <div className="absolute bottom-4 right-6 flex items-center gap-2 flex-wrap justify-end">
                   <span className="px-3 py-1 glass-panel text-[10px] font-label-caps text-primary uppercase border-primary/10">
                     Draft #{activeDraft.draft_id ?? activeDraft.id}
                   </span>
                   <span className="px-3 py-1 glass-panel text-[10px] font-label-caps text-secondary uppercase border-secondary/10">
                     {activeDraft.model_used}
                   </span>
+                  {activeDraft.latency_ms != null && (
+                    <span className="px-3 py-1 glass-panel text-[10px] font-label-caps text-on-surface-variant border-black/5">
+                      {activeDraft.latency_ms}ms · {activeDraft.tokens?.total ?? 0}t · ${(activeDraft.cost_usd ?? 0).toFixed(6)}
+                    </span>
+                  )}
                 </div>
               )}
             </GlassPanel>

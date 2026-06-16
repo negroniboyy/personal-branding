@@ -69,25 +69,108 @@ def init_db(conn: sqlite3.Connection) -> None:
         except Exception:
             pass
     conn.commit()
+    _make_story_node_nullable(conn)
+    from shared.lifecycle import migrate_lifecycle_columns
+    migrate_lifecycle_columns(conn, "reel_scripts")
     _backfill_reel_descriptions(conn)
+
+
+def _make_story_node_nullable(conn: sqlite3.Connection) -> None:
+    info = conn.execute("PRAGMA table_info(reel_scripts)").fetchall()
+    col = next((r for r in info if r["name"] == "story_node_id"), None)
+    if col is None or col["notnull"] == 0:
+        return
+    conn.executescript("""
+        CREATE TABLE IF NOT EXISTS reel_scripts_new (
+            id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+            story_node_id       INTEGER,
+            framework_id        TEXT NOT NULL,
+            idea_prompt         TEXT,
+            generated_text      TEXT NOT NULL,
+            model_used          TEXT NOT NULL,
+            duration_target_sec REAL,
+            created_at          TEXT NOT NULL,
+            idea_id             TEXT REFERENCES ideas(id)
+        );
+        INSERT INTO reel_scripts_new
+            SELECT id, story_node_id, framework_id, idea_prompt,
+                   generated_text, model_used, duration_target_sec, created_at,
+                   CASE WHEN EXISTS(SELECT 1 FROM pragma_table_info('reel_scripts') WHERE name='idea_id')
+                        THEN idea_id ELSE NULL END
+            FROM reel_scripts;
+        DROP TABLE reel_scripts;
+        ALTER TABLE reel_scripts_new RENAME TO reel_scripts;
+    """)
+    conn.commit()
 
 
 # ---------------------------------------------------------------------------
 # Loaders
 # ---------------------------------------------------------------------------
 
-def load_story_nodes(conn: sqlite3.Connection, limit: int) -> list[dict]:
+ROMANTIC_TAGS = {
+    "relationship", "relationships", "dating", "romance", "romantic",
+    "love", "partner", "marriage", "breakup", "heartbreak",
+}
+
+
+def load_story_nodes(
+    conn: sqlite3.Connection,
+    limit: int,
+    min_worth_score: float = 0.0,
+    domain: str | None = None,
+    exclude_used_in: str | None = None,
+) -> list[dict]:
+    filters = ["worth_score >= ?"]
+    params: list = [min_worth_score]
+
+    if domain:
+        filters.append("thematic_tags LIKE ?")
+        params.append(f"%{domain}%")
+
+    # Rotation: skip story nodes that already produced a draft in the given
+    # table (e.g. "reel_scripts") so each batch reaches fresh notes instead of
+    # re-mining the same top-scored ones every run. CAST guards int/str id-type
+    # drift between story_nodes.id and <table>.story_node_id.
+    if exclude_used_in:
+        filters.append(
+            f"CAST(id AS TEXT) NOT IN "
+            f"(SELECT CAST(story_node_id AS TEXT) FROM {exclude_used_in} "
+            f"WHERE story_node_id IS NOT NULL)"
+        )
+
+    # Exclude story nodes whose primary subject is romantic/relationship content
+    for tag in ROMANTIC_TAGS:
+        filters.append("(thematic_tags NOT LIKE ? OR thematic_tags IS NULL)")
+        params.append(f'%"{tag}"%')
+
+    where = " AND ".join(filters)
+    params.append(limit * 3)  # fetch extra to allow post-filter
+
     rows = conn.execute(
-        """
+        f"""
         SELECT id, page_id, user_state, conflict_node, desired_outcome,
                the_bridge, thematic_tags, worth_score
         FROM story_nodes
+        WHERE {where}
         ORDER BY worth_score DESC
         LIMIT ?
         """,
-        (limit,),
+        params,
     ).fetchall()
-    return [dict(r) for r in rows]
+
+    # Secondary filter: exclude if user_state text is dominantly about relationships
+    _romantic_words = {"relationship", "romantic", "partner", "dating", "girlfriend", "boyfriend"}
+    results = []
+    for r in rows:
+        state = (r["user_state"] or "").lower()
+        word_hits = sum(1 for w in _romantic_words if w in state)
+        if word_hits <= 1:  # allow incidental mentions
+            results.append(dict(r))
+        if len(results) >= limit:
+            break
+
+    return results
 
 
 def load_reel_frameworks(conn: sqlite3.Connection) -> list[dict]:
@@ -230,15 +313,46 @@ def _format_framework(fw: dict) -> str:
     return (
         f"Duration target: {fw.get('duration_sec', 0.0):.1f}s\n"
         f"Hook type: {fw.get('hook_type', '')}\n"
-        f"Hook verbal: {fw.get('hook_verbal', '')}\n"
+        f"Hook verbal (EXAMPLE from an UNRELATED topic — copy the SHAPE, never the subject): {fw.get('hook_verbal', '')}\n"
         f"Hook silence (pre-speech): {fw.get('hook_silence_sec', 0.0):.2f}s\n"
         f"Pacing: {fw.get('pacing', '')}\n"
         f"Tone: {fw.get('tone', '')}\n"
         f"CTA type: {fw.get('cta_type', '')}\n"
-        f"CTA verbal example: {fw.get('cta_verbal', '')}\n"
+        f"CTA verbal (EXAMPLE from an UNRELATED topic — shape only, never the subject): {fw.get('cta_verbal', '')}\n"
         f"Scene count: {fw.get('scene_count', '')}\n"
-        f"Structure:\n{structure_str}"
+        f"Structure (SHAPE template — its example topics/tools are from a DIFFERENT story; never reuse them as content):\n{structure_str}"
     )
+
+
+def get_chunks_for_story(conn: sqlite3.Connection, story_id: str, max_chars: int = 4000) -> str:
+    """Raw verbatim diary text behind a story node, joined and capped.
+
+    This is the real source material the script must be built from. The reel
+    pipeline historically only passed the distilled story_node fields, which
+    are too abstract — the model then borrowed concrete details from the
+    framework's example instead. This reconnects the script to the diary.
+    """
+    rows = conn.execute(
+        """
+        SELECT c.chunk_text FROM chunks c
+        JOIN story_nodes sn ON sn.page_id = c.page_id
+        WHERE sn.id = ?
+        ORDER BY c.chunk_index
+        """,
+        (story_id,),
+    ).fetchall()
+    texts = [r["chunk_text"] for r in rows if r["chunk_text"]]
+    return "\n\n".join(texts)[:max_chars]
+
+
+def _format_chunks(source_text: str) -> str:
+    text = (source_text or "").strip()
+    if not text:
+        return (
+            "(no verbatim diary text available — rely on the distilled fields above "
+            "and DO NOT invent concrete specifics, names, tools, or events)"
+        )
+    return text
 
 
 def build_script_prompt(
@@ -246,12 +360,46 @@ def build_script_prompt(
     framework: dict,
     idea_prompt: str | None,
     prompt_template: str,
+    source_text: str = "",
 ) -> str:
+    idea_section = (
+        f"PRIMARY ANGLE — lead with this, use the story only as factual backing:\n{idea_prompt}"
+        if idea_prompt
+        else "(none provided — improvise from story)"
+    )
     return llm_client.inject(
         prompt_template,
         STORY=_format_story(story),
+        SOURCE=_format_chunks(source_text),
         FRAMEWORK=_format_framework(framework),
-        IDEA=idea_prompt or "(none provided — improvise from story)",
+        IDEA=idea_section,
+    )
+
+
+def build_freeform_script_prompt(
+    idea_prompt: str,
+    framework: dict,
+) -> str:
+    return (
+        "You are a short-form video scriptwriter. Write a scene-by-scene Instagram Reel script "
+        "based entirely on the idea below. Apply the structural framework provided.\n\n"
+        "**OUTPUT FORMAT — plain voiceover text only, no labels or headers.**\n\n"
+        "Write only the spoken words. No scene numbers, no timestamps, no 'VOICEOVER:' labels.\n"
+        "Separate each scene's lines with a blank line.\n\n"
+        "---\n\n"
+        "**RULES:**\n"
+        "- Total script duration must match the framework's duration target\n"
+        "- Number of scenes must match the framework's scene count\n"
+        "- Honor the framework's pacing: fast = short punchy lines, slow = space for pauses\n"
+        "- Hook (SCENE 1) must match the framework's hook type\n"
+        "- CTA scene must match the framework's cta type\n"
+        "- Tone must match the framework's tone throughout\n"
+        "- The IDEA is the only source of truth — do not invent unrelated facts\n"
+        "- Write the VOICEOVER as words the creator will actually say out loud\n\n"
+        "---\n\n"
+        f"IDEA (this is the entire source material — write from it):\n{idea_prompt}\n\n"
+        "---\n\n"
+        f"FRAMEWORK:\n{_format_framework(framework)}"
     )
 
 
@@ -259,9 +407,23 @@ def build_script_prompt(
 # Generate + save
 # ---------------------------------------------------------------------------
 
+def clean_script_output(text: str) -> str:
+    """Strip scene headers and VOICEOVER labels from LLM output."""
+    import re
+    # Remove lines like "SCENE 3 (4.2s–6.0s):" or "**SCENE 3 (4.2s–6.0s):**"
+    text = re.sub(r"\*{0,2}SCENE\s+\d+[^:\n]*:\*{0,2}\s*\n?", "", text, flags=re.IGNORECASE)
+    # Remove "VOICEOVER:" prefix (with optional bold markers)
+    text = re.sub(r"\*{0,2}VOICEOVER:\*{0,2}\s*", "", text, flags=re.IGNORECASE)
+    # Remove "---" dividers
+    text = re.sub(r"^---+\s*$", "", text, flags=re.MULTILINE)
+    # Collapse 3+ blank lines to 2
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
+
+
 def generate_script(prompt: str, cfg: dict) -> tuple[str, str]:
-    script = llm_client.complete(prompt, section="script_writer")
-    return script, cfg["ollama_model"]
+    script, model_used = llm_client.complete(prompt, section="script_writer")
+    return clean_script_output(script), model_used
 
 
 def save_script(

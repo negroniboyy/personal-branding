@@ -1,4 +1,0 @@
-interface:
-  display_name: "pb_content_strategy"
-  short_description: "Plan the next PersonalBrand LinkedIn directions."
-  default_prompt: "Use $pb-content-strategy to decide the next PersonalBrand LinkedIn themes and hand off approved directions to $pb-linkedin-title."

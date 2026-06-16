@@ -31,8 +31,8 @@ class Framework:
 
 @dataclass
 class ContentDraft:
-    story_node_id: int
-    framework_id: int
+    story_node_id: Optional[str]
+    framework_id: str
     generated_text: str
     model_used: str
     id: Optional[int] = None
@@ -43,7 +43,8 @@ class ContentDraft:
 @dataclass
 class RecommendationRequest:
     idea_prompt: Optional[str] = None
-    top_n: int = 5
+    top_n: int = 20
+    domain: Optional[str] = None
 
 
 @dataclass
@@ -54,8 +55,8 @@ class RecommendationResult:
 
 @dataclass
 class GenerateRequest:
-    story_node_id: int
-    framework_id: int
+    story_node_id: Optional[str]
+    framework_id: str
     idea_prompt: Optional[str] = None
     provider: str = "ollama"
     model: str = "gemma3:latest"
@@ -65,6 +66,6 @@ class GenerateRequest:
 class GenerateResult:
     draft_id: int
     generated_text: str
-    story_node_id: int
-    framework_id: int
+    story_node_id: Optional[str]
+    framework_id: str
     model_used: str

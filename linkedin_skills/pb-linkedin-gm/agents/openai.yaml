@@ -1,4 +1,0 @@
-interface:
-  display_name: "pb_linkedin_gm"
-  short_description: "Coordinate weekly LinkedIn work across PersonalBrand skills."
-  default_prompt: "Use $pb-linkedin-gm to review the next week of PersonalBrand LinkedIn work, show required approvals, and propose an execution plan."

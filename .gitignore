@@ -34,3 +34,10 @@ drafts/
 
 # Superpower
 *.superpowers
+
+# Runtime DB dir (fuse hidden files + sqlite)
+NOTION DIARY FETCHER/data/
+
+# Stray accidental files
+/DIARY
+/NOTION

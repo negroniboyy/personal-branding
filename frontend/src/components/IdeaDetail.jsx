@@ -4,15 +4,8 @@ import { fetchIdea, patchIdea, generateLinkedInDraft, generateReelScript, delete
 import GlassPanel from "./ui/GlassPanel.jsx"
 import PrimaryButton from "./ui/PrimaryButton.jsx"
 import Icon from "./ui/Icon.jsx"
-
-const CW_BASE = "http://localhost:8000"
-
-function fwLabel(fw, channel) {
-  const parts = channel === "linkedin"
-    ? [fw.hook_type, fw.tone, fw.cta]
-    : [fw.hook_type, fw.tone, fw.cta_type]
-  return parts.filter(Boolean).map(s => s.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())).join(" · ")
-}
+import { frameworkLabel } from "../lib/frameworkLabel.js"
+import { API_BASE as CW_BASE } from "../apiBase"
 
 export default function IdeaDetail({ ideaId, onIdeaUpdated }) {
   const [idea, setIdea] = useState(null)
@@ -151,7 +144,7 @@ export default function IdeaDetail({ ideaId, onIdeaUpdated }) {
       <textarea
         value={body}
         onChange={handleBodyChange}
-        placeholder="Expand on this idea..."
+        placeholder="Write your draft here — this becomes the source material. The framework will shape it."
         rows={5}
         className="w-full bg-white/40 border border-black/5 rounded-lg p-4 font-mono-script text-mono-script text-on-surface focus:ring-1 focus:ring-primary focus:border-primary outline-none resize-none transition-all placeholder:text-outline-variant"
       />
@@ -168,7 +161,7 @@ export default function IdeaDetail({ ideaId, onIdeaUpdated }) {
           >
             <option value="">Auto-pick</option>
             {linkedinFrameworks.map(f => (
-              <option key={f.id} value={f.id}>{fwLabel(f, "linkedin")}</option>
+              <option key={f.id} value={f.id}>{frameworkLabel(f, "linkedin")}</option>
             ))}
           </select>
           {selectedLinkedInFwId && linkedinFrameworks.find(f => f.id === selectedLinkedInFwId)?.description && (
@@ -197,7 +190,7 @@ export default function IdeaDetail({ ideaId, onIdeaUpdated }) {
           >
             <option value="">Auto-pick</option>
             {reelFrameworks.map(f => (
-              <option key={f.id} value={f.id}>{fwLabel(f, "reel")}</option>
+              <option key={f.id} value={f.id}>{frameworkLabel(f, "reel")}</option>
             ))}
           </select>
           {selectedReelFwId && reelFrameworks.find(f => f.id === selectedReelFwId)?.description && (

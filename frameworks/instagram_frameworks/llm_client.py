@@ -28,16 +28,31 @@ def load_config(section: str) -> dict:
     return node
 
 
-def complete(prompt: str, section: str = "reel_extractor", dry_run: bool = False) -> str:
+_TASK_MAP = {
+    "script_writer": "generate_reel_script",
+    "reel_extractor": "extract_reel_framework",
+}
+
+
+def complete(prompt: str, section: str = "reel_extractor", dry_run: bool = False) -> tuple[str, str]:
+    """Returns (content, model_used)."""
     cfg = load_config(section)
-    model = cfg["ollama_model"]
-    endpoint = cfg["ollama_endpoint"].rstrip("/")
 
     if dry_run:
         print(prompt)
         sys.exit(0)
 
-    return _ollama_complete(prompt, model, endpoint)
+    provider = cfg.get("provider", "ollama")
+    if provider == "openrouter":
+        from openrouter.router import chat as llm_chat  # lazy — safe without API key at import time
+        task = _TASK_MAP.get(section, section)
+        messages = [{"role": "user", "content": prompt}]
+        result = llm_chat(task, messages, max_tokens=2048)
+        return result["content"], result.get("model", "openrouter:unknown")
+
+    model = cfg["ollama_model"]
+    endpoint = cfg["ollama_endpoint"].rstrip("/")
+    return _ollama_complete(prompt, model, endpoint), f"ollama:{model}"
 
 
 def _ollama_complete(prompt: str, model: str, endpoint: str) -> str:

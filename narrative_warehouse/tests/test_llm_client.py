@@ -2,7 +2,6 @@ import pytest
 import json
 from narrative_warehouse.llm_client import (
     ExtractionResult,
-    MinimaxCloudClient,
     OllamaClient,
     make_llm_client,
 )

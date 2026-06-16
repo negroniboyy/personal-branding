@@ -1,4 +1,0 @@
-interface:
-  display_name: "pb_linkedin_performance"
-  short_description: "Review LinkedIn performance from exported analytics."
-  default_prompt: "Use $pb-linkedin-performance to review a recent LinkedIn analytics export, import matched metrics into the local PB database, and suggest 2 to 3 brand-safe improvements."

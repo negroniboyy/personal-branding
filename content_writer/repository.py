@@ -5,16 +5,32 @@ from typing import Optional
 from .models import ContentDraft, Framework, StoryNode
 
 
-def get_story_nodes(conn: sqlite3.Connection, limit: int = 20) -> list[StoryNode]:
+def get_story_nodes(
+    conn: sqlite3.Connection,
+    limit: int = 20,
+    min_worth_score: float = 0.0,
+    domain: Optional[str] = None,
+) -> list[StoryNode]:
+    filters = ["worth_score >= ?"]
+    params: list = [min_worth_score]
+
+    if domain:
+        filters.append("thematic_tags LIKE ?")
+        params.append(f"%{domain}%")
+
+    where = " AND ".join(filters)
+    params.append(limit)
+
     rows = conn.execute(
-        """
+        f"""
         SELECT id, conflict_node, user_state, desired_outcome,
                the_bridge, thematic_tags, worth_score
         FROM story_nodes
+        WHERE {where}
         ORDER BY worth_score DESC
         LIMIT ?
         """,
-        (limit,),
+        params,
     ).fetchall()
     return [
         StoryNode(

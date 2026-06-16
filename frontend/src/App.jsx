@@ -8,10 +8,12 @@ import ContentWriter from "./components/ContentWriter.jsx"
 import ReelWriter from "./components/ReelWriter.jsx"
 import IdeasTab from "./components/IdeasTab.jsx"
 import FrameworksTab from "./components/FrameworksTab.jsx"
+import StudioTab from "./components/StudioTab.jsx"
 import Sidebar from "./components/layout/Sidebar.jsx"
 import MobileNav from "./components/layout/MobileNav.jsx"
 
 const PAGE_TITLES = {
+  studio: "Studio",
   diary: "Diary",
   narrative: "Narrative Warehouse",
   writer: "Content Writer",
@@ -21,12 +23,27 @@ const PAGE_TITLES = {
 }
 
 export default function App() {
-  const [tab, setTab] = useState("diary")
+  const [tab, setTab] = useState("studio")
   const [selectedPageId, setSelectedPageId] = useState(null)
+  const [writerStory, setWriterStory] = useState(null)
+  const [reelStory, setReelStory] = useState(null)
 
   function handleTabChange(newTab) {
     setTab(newTab)
     if (newTab !== "diary") setSelectedPageId(null)
+    if (newTab !== "writer") setWriterStory(null)
+    if (newTab !== "reels") setReelStory(null)
+  }
+
+  function handleCreate(channel, node) {
+    if (channel === "linkedin") {
+      setWriterStory(node)
+      setTab("writer")
+    } else {
+      setReelStory(node)
+      setTab("reels")
+    }
+    setSelectedPageId(null)
   }
 
   return (
@@ -53,7 +70,7 @@ export default function App() {
           {/* Tab content with crossfade transition */}
           <AnimatePresence mode="wait">
             <motion.div
-              key={tab + (selectedPageId ?? "")}
+              key={tab + (selectedPageId ?? "") + (writerStory?.id ?? "") + (reelStory?.id ?? "")}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
@@ -64,15 +81,16 @@ export default function App() {
                   ? <PageList onSelect={setSelectedPageId} />
                   : <PageDetail pageId={selectedPageId} onBack={() => setSelectedPageId(null)} />
               )}
-              {tab === "writer" && <ContentWriter />}
-              {tab === "reels" && <ReelWriter />}
+              {tab === "studio" && <StudioTab />}
+              {tab === "writer" && <ContentWriter initialStory={writerStory} />}
+              {tab === "reels" && <ReelWriter initialStory={reelStory} />}
               {tab === "ideas" && <IdeasTab />}
               {tab === "frameworks" && <FrameworksTab />}
               {tab === "narrative" && (
                 <div className="flex flex-col gap-0">
                   <NarrativeDashboard />
                   <h2 className="font-label-caps text-label-caps text-on-surface-variant mt-2 mb-4">STORY IDEAS</h2>
-                  <StoryNodeList />
+                  <StoryNodeList onCreate={handleCreate} />
                 </div>
               )}
             </motion.div>

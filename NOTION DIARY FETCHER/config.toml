@@ -10,25 +10,25 @@ chunk_overlap_chars = 50
 page_size = 100
 
 [narrative_warehouse]
+provider = "ollama"
 llm_provider = "ollama"
 llm_model = "gemma-32k:latest"
-
-[minimax]
-api_key = ""
-base_url = "https://api.minimax.io"
-model_name = "MiniMax-Text-01"
 
 [ollama]
 base_url = "http://localhost:11434"
 default_model = "gemma-32k:latest"
 
 [content_writer]
+provider = "openrouter"
 ollama_model = "gemma-32k:latest"
 ollama_host = "http://localhost:11434"
 max_source_chars = 12000
-default_story_limit = 20
+default_story_limit = 200
+min_worth_score = 0.80
+recognized_domains = ["building", "career", "ai", "fitness", "philosophy"]
 
 [reel_extractor]
+provider = "openrouter"
 whisper_model        = "base"
 scenedetect_mode     = "adaptive"
 content_threshold    = 20.0
@@ -45,6 +45,7 @@ frame_sample_count = 6
 frame_strategy     = "scene_midpoints"
 
 [script_writer]
+provider = "openrouter"
 ollama_model             = "gemma-32k:latest"
 ollama_endpoint          = "http://localhost:11434"
 top_n_stories            = 5

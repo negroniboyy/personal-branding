@@ -12,7 +12,20 @@
       "Bash(python3 '~/.codex/skills/session-checkpoint/scripts/build_code_memory.py' --repo-root /Users/maxkiyuna/Documents/test_personal_brand --output md/code_memory --mode full)",
       "Bash(python3 '~/.claude/skills/session-checkpoint/scripts/build_code_memory.py' --repo-root /Users/maxkiyuna/Documents/test_personal_brand --output md --mode changed --no-docs)",
       "Bash(cat)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(sqlite3 \"NOTION DIARY FETCHER/data/notion_diary.db\" \"SELECT id, generated_text, caption, cta FROM reel_scripts WHERE id=14;\")",
+      "Bash(sqlite3 \"NOTION DIARY FETCHER/data/notion_diary.db\" \"UPDATE reel_scripts SET asana_task_gid='1215692288491134' WHERE id=14; SELECT changes\\(\\);\")",
+      "Bash(sqlite3 \"/Users/maxkiyuna/Documents/personal_brand/NOTION DIARY FETCHER/data/notion_diary.db\" \"SELECT \\(SELECT COUNT\\(*\\) FROM reel_scripts WHERE status='queued'\\) + \\(SELECT COUNT\\(*\\) FROM content_drafts WHERE status='queued'\\);\")",
+      "Bash(curl -s http://localhost:9000/health)",
+      "Bash(sqlite3 '/Users/maxkiyuna/Documents/personal_brand/NOTION DIARY FETCHER/data/notion_diary.db' ' *)",
+      "Bash(sqlite3 \"/Users/maxkiyuna/Documents/personal_brand/NOTION DIARY FETCHER/data/notion_diary.db\" \"SELECT \\(SELECT COUNT\\(*\\) FROM reel_scripts WHERE status='queued'\\) + \\(SELECT COUNT\\(*\\) FROM content_drafts WHERE status='queued'\\) as total_queued;\")",
+      "Bash(curl -s --max-time 3 http://localhost:9000/health)",
+      "mcp__216c67f9-496d-4d1e-a7ad-1adc6578d6a2__get_tasks",
+      "mcp__216c67f9-496d-4d1e-a7ad-1adc6578d6a2__create_tasks",
+      "Bash(curl -s -X PATCH http://localhost:9000/reels/scripts/2/meta -H \"Content-Type: application/json\" -d '{\"asana_task_gid\": \"1215696637885914\"}')",
+      "Bash(curl -s -X PATCH http://localhost:9000/reels/scripts/3/meta -H \"Content-Type: application/json\" -d '{\"asana_task_gid\": \"1215696637905264\"}')",
+      "Bash(sqlite3 \"/Users/maxkiyuna/Documents/personal_brand/NOTION DIARY FETCHER/data/notion_diary.db\" \"SELECT \\(SELECT COUNT\\(*\\) FROM reel_scripts WHERE status='queued'\\) + \\(SELECT COUNT\\(*\\) FROM content_drafts WHERE status='queued'\\) AS total_queued;\")",
+      "Bash(curl -s --max-time 5 http://localhost:9000/health)"
     ]
   }
 }

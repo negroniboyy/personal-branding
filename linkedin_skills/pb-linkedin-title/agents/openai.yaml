@@ -1,4 +1,0 @@
-interface:
-  display_name: "pb_linkedin_title"
-  short_description: "Plan the next LinkedIn titles and sync the content sheet."
-  default_prompt: "Use $pb-linkedin-title to read the TurboBaba planner, propose the next five LinkedIn posts, and update the content sheet."

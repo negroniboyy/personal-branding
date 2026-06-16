@@ -1,4 +1,4 @@
-const BASE = "http://localhost:8000"
+import { API_BASE as BASE } from "./apiBase"
 
 export async function fetchReelFrameworks() {
   const res = await fetch(`${BASE}/reels/frameworks`)
@@ -6,21 +6,21 @@ export async function fetchReelFrameworks() {
   return res.json()
 }
 
-export async function postReelRecommendations({ idea_prompt = null, top_n = 5 } = {}) {
+export async function postReelRecommendations({ idea_prompt = null, top_n = 20, domain = null } = {}) {
   const res = await fetch(`${BASE}/reels/recommendations`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ idea_prompt, top_n }),
+    body: JSON.stringify({ idea_prompt, top_n, domain }),
   })
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res.json()
 }
 
-export async function postReelGenerate({ story_node_id, framework_id, idea_prompt = null }) {
+export async function postReelGenerate({ story_node_id, framework_id, idea_prompt = null, model = null, provider = null }) {
   const res = await fetch(`${BASE}/reels/generate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ story_node_id, framework_id, idea_prompt }),
+    body: JSON.stringify({ story_node_id, framework_id, idea_prompt, model, provider }),
   })
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res.json()
@@ -58,6 +58,29 @@ export async function patchReelScript(id, generated_text) {
     body: JSON.stringify({ generated_text }),
   })
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json()
+}
+
+export async function patchReelScriptMeta(id, meta) {
+  const res = await fetch(`${BASE}/reels/scripts/${id}/meta`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(meta),
+  })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json()
+}
+
+export async function postReelPackage(id, model = null) {
+  const res = await fetch(`${BASE}/reels/scripts/${id}/package`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ model }),
+  })
+  if (!res.ok) {
+    const detail = await res.json().catch(() => ({}))
+    throw new Error(detail.detail || `HTTP ${res.status}`)
+  }
   return res.json()
 }
 

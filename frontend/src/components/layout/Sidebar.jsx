@@ -3,11 +3,12 @@ import { motion, LayoutGroup } from "framer-motion"
 import Icon from "../ui/Icon.jsx"
 
 const NAV_ITEMS = [
-  { id: "diary",       label: "Diary",       icon: "auto_stories" },
-  { id: "narrative",   label: "Narrative",   icon: "account_tree" },
-  { id: "writer",      label: "Writer",      icon: "edit_note"    },
+  { id: "studio",      label: "Studio",      icon: "rocket_launch" },
   { id: "reels",       label: "Reels",       icon: "movie_edit"   },
+  { id: "writer",      label: "Writer",      icon: "edit_note"    },
+  { id: "narrative",   label: "Narrative",   icon: "account_tree" },
   { id: "ideas",       label: "Ideas",       icon: "lightbulb"    },
+  { id: "diary",       label: "Diary",       icon: "auto_stories" },
   { id: "frameworks",  label: "Frameworks",  icon: "schema"       },
 ]
 

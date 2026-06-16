@@ -42,6 +42,17 @@ def run_extraction(provider: str | None = None, model: str | None = None) -> dic
 
     for page_row in pages:
         page_id = page_row["id"]
+
+        # Layer 2 guard: skip if a story_node already exists for this page
+        existing = conn.execute(
+            "SELECT id FROM story_nodes WHERE page_id = ? LIMIT 1", (page_id,)
+        ).fetchone()
+        if existing:
+            logger.debug("Page %s already has story_node %s — marking done, skipping", page_id, existing["id"])
+            conn.execute("UPDATE pages SET processed_status = 1 WHERE id = ?", (page_id,))
+            conn.commit()
+            continue
+
         diary_text = build_diary_text(conn, page_id)
 
         if not diary_text.strip():

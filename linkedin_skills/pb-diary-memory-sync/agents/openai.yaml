@@ -1,4 +1,0 @@
-interface:
-  display_name: "PB Diary Memory"
-  short_description: "Refresh Notion diary memory for brand-grounded content"
-  default_prompt: "Use $pb-diary-memory-sync to refresh Diary 2026 from Notion and ground PersonalBrand content work in the latest memory files."

@@ -17,6 +17,7 @@ export default function NarrativeDashboard() {
   const [synthesizing, setSynthesizing] = useState(false)
   const [synthResult, setSynthResult] = useState(null)
   const [threads, setThreads] = useState([])
+  const [advancedOpen, setAdvancedOpen] = useState(false)
 
   useEffect(() => {
     fetchWeeklyIndex(50).then(data => setWeeks(data.items || [])).catch(() => {})
@@ -129,9 +130,22 @@ export default function NarrativeDashboard() {
         )}
       </GlassPanel>
 
-      {/* Synthesize specific week */}
+      {/* Advanced: synthesize a specific past week */}
       <GlassPanel className="rounded-xl p-card_padding">
-        <h3 className="font-label-caps text-label-caps text-on-surface-variant mb-4">SYNTHESIZE SPECIFIC WEEK</h3>
+        <button
+          onClick={() => setAdvancedOpen(o => !o)}
+          className="w-full flex items-center justify-between"
+        >
+          <span className="font-label-caps text-label-caps text-on-surface-variant">ADVANCED</span>
+          <Icon name={advancedOpen ? "expand_less" : "expand_more"} size={18} className="text-on-surface-variant" />
+        </button>
+
+        {advancedOpen && (
+        <div className="mt-4">
+        <h3 className="font-label-caps text-label-caps text-on-surface-variant mb-2">SYNTHESIZE SPECIFIC WEEK</h3>
+        <p className="font-body text-body text-on-surface-variant mb-4 leading-relaxed">
+          Re-runs thread synthesis for one past week (recomputes threads, open loops, and sentiment for that range). "Sync All" already does this for the latest week — use this only to rebuild an older week.
+        </p>
         <div className="flex gap-3 flex-wrap items-center">
           <select
             value={selectedWeek || ""}
@@ -163,6 +177,8 @@ export default function NarrativeDashboard() {
           >
             Done: {synthResult.thread_count} threads · {synthResult.open_loops} open · {synthResult.closed_loops} closed · δ={synthResult.sentiment_delta?.toFixed(3)}
           </motion.div>
+        )}
+        </div>
         )}
       </GlassPanel>
     </div>

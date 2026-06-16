@@ -1,0 +1,35 @@
+# OpenRouter model routing.
+# Edit tiers here — do not hardcode model IDs in application code.
+# Tier 3 (local) always falls back to Ollama gemma-32k:latest.
+
+tasks:
+  generate_linkedin_post:
+    primary:   openai/gpt-oss-120b:free
+    local:     gemma-32k:latest
+    options:
+      - google/gemma-4-26b-a4b-it
+      - qwen/qwen3-235b-a22b-2507
+      - qwen/qwen3-235b-a22b-thinking-2507
+      - deepseek/deepseek-v4-flash
+
+  generate_reel_script:
+    # qwen-thinking chosen via bake-off (2026-06-14): selects ONE thread from
+    # messy diary logs + holds voice, ~90% of Opus quality at ~1% of the cost.
+    # gpt-oss-120b:free could not select (laundry-listed) and is now a fallback.
+    primary:   qwen/qwen3-235b-a22b-thinking-2507
+    local:     gemma-32k:latest
+    options:
+      - openai/gpt-oss-120b:free
+      - google/gemma-4-26b-a4b-it
+      - qwen/qwen3-235b-a22b-2507
+      - deepseek/deepseek-v4-flash
+
+  extract_story_node:
+    primary:   google/gemma-4-31b-it:free
+    secondary: deepseek/deepseek-v4-flash:free
+    local:     gemma-32k:latest
+
+  extract_reel_framework:
+    primary:   google/gemma-4-31b-it:free
+    secondary: deepseek/deepseek-v4-flash:free
+    local:     gemma-32k:latest

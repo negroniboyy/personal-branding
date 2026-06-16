@@ -39,6 +39,23 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent / "frameworks"))
 from api_routes import router as frameworks_router
 app.include_router(frameworks_router)
 
+
+@app.get("/openrouter/models")
+def list_openrouter_models():
+    import yaml
+    config_path = Path(__file__).parent.parent.parent / "config" / "openrouter_models.yaml"
+    with open(config_path) as f:
+        config = yaml.safe_load(f)
+    return {
+        task: {
+            "chain": [m for m in (v.get("primary"), v.get("secondary")) if m]
+            + [f"ollama:{v.get('local', 'gemma-32k:latest')}"]
+            + v.get("options", []),
+            "default": v["primary"],
+        }
+        for task, v in config["tasks"].items()
+    }
+
 DB_PATH = Path(__file__).parent.parent / "data" / "notion_diary.db"
 
 

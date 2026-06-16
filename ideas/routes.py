@@ -122,22 +122,18 @@ def generate_linkedin(idea_id: str, body: GenerateDraftRequest):
             raise HTTPException(status_code=404, detail=f"idea {idea_id!r} not found")
 
         idea_prompt = body.idea_prompt or idea.body or idea.title or None
-        story_node_id = body.story_node_id
+        if not idea_prompt:
+            raise HTTPException(status_code=422, detail="Idea has no text — add a title or body before generating")
+
         framework_id = body.framework_id
-
-        if not story_node_id or not framework_id:
-            rec_req = RecommendationRequest(idea_prompt=idea_prompt, top_n=1)
-            recs = _cw_recs(conn, rec_req)
-            if not story_node_id and recs.stories:
-                story_node_id = recs.stories[0].id
-            if not framework_id and recs.frameworks:
-                framework_id = recs.frameworks[0].id
-
-        if not story_node_id or not framework_id:
-            raise HTTPException(status_code=422, detail="No stories or frameworks available")
+        if not framework_id:
+            recs = _cw_recs(conn, RecommendationRequest(idea_prompt=idea_prompt, top_n=1))
+            if not recs.frameworks:
+                raise HTTPException(status_code=422, detail="No LinkedIn frameworks available")
+            framework_id = recs.frameworks[0].id
 
         gen_req = GenerateRequest(
-            story_node_id=story_node_id,
+            story_node_id=None,
             framework_id=framework_id,
             idea_prompt=idea_prompt,
         )
@@ -149,7 +145,7 @@ def generate_linkedin(idea_id: str, body: GenerateDraftRequest):
             "channel": "linkedin",
             "generated_text": result.generated_text,
             "framework_id": str(result.framework_id),
-            "story_node_id": str(result.story_node_id),
+            "story_node_id": None,
             "model_used": result.model_used,
         }
     finally:
@@ -165,51 +161,30 @@ def generate_reel(idea_id: str, body: GenerateDraftRequest):
             raise HTTPException(status_code=404, detail=f"idea {idea_id!r} not found")
 
         idea_prompt = body.idea_prompt or idea.body or idea.title or None
-        story_node_id = body.story_node_id
+        if not idea_prompt:
+            raise HTTPException(status_code=422, detail="Idea has no text — add a title or body before generating")
+
         framework_id = body.framework_id
-
-        if not story_node_id:
-            stories = script_writer.load_story_nodes(conn, limit=1)
-            if stories:
-                story_node_id = stories[0]["id"]
-
-        if not story_node_id:
-            raise HTTPException(status_code=422, detail="No story nodes available")
-
         all_fw = script_writer.load_reel_frameworks(conn)
-        if not framework_id and all_fw:
-            if idea_prompt:
-                story_row = conn.execute(
-                    "SELECT * FROM story_nodes WHERE id = ?", (story_node_id,)
-                ).fetchone()
-                if story_row:
-                    scored = script_writer.score_frameworks(dict(story_row), all_fw, idea_prompt)
-                    framework_id = scored[0]["id"] if scored else all_fw[0]["id"]
-                else:
-                    framework_id = all_fw[0]["id"]
-            else:
-                framework_id = all_fw[0]["id"]
+        if not all_fw:
+            raise HTTPException(status_code=422, detail="No reel frameworks available")
 
         if not framework_id:
-            raise HTTPException(status_code=422, detail="No reel frameworks available")
+            scored = script_writer.score_frameworks({}, all_fw, idea_prompt)
+            framework_id = scored[0]["id"] if scored else all_fw[0]["id"]
 
         fw_row = conn.execute("SELECT * FROM reel_frameworks WHERE id = ?", (framework_id,)).fetchone()
         if not fw_row:
             raise HTTPException(status_code=404, detail=f"reel_framework {framework_id!r} not found")
 
-        story_row = conn.execute("SELECT * FROM story_nodes WHERE id = ?", (story_node_id,)).fetchone()
-        if not story_row:
-            raise HTTPException(status_code=404, detail=f"story_node {story_node_id!r} not found")
-
-        prompt_template = SCRIPT_PROMPT_PATH.read_text(encoding="utf-8")
+        prompt = script_writer.build_freeform_script_prompt(idea_prompt, dict(fw_row))
         cfg = llm_client.load_config("script_writer")
-        prompt = script_writer.build_script_prompt(dict(story_row), dict(fw_row), idea_prompt, prompt_template)
         text, model_used = script_writer.generate_script(prompt, cfg)
 
         script_writer.init_db(conn)
         duration_target = float(fw_row["duration_sec"] or 0.0)
         script_id = script_writer.save_script(
-            conn, story_node_id, framework_id, idea_prompt, text, model_used, duration_target,
+            conn, None, framework_id, idea_prompt, text, model_used, duration_target,
         )
         repository.link_reel(conn, script_id, idea_id)
 
@@ -218,7 +193,7 @@ def generate_reel(idea_id: str, body: GenerateDraftRequest):
             "channel": "reel",
             "generated_text": text,
             "framework_id": framework_id,
-            "story_node_id": story_node_id,
+            "story_node_id": None,
             "model_used": model_used,
         }
     finally:
