@@ -131,7 +131,7 @@ export default function IdeaDetail({ ideaId, onIdeaUpdated }) {
   }
 
   return (
-    <div className="flex flex-col gap-5 h-full overflow-y-auto pr-1">
+    <div className="flex flex-col gap-5 md:h-full md:overflow-y-auto md:pr-1">
       {/* Title */}
       <input
         value={title}

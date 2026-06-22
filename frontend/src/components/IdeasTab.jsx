@@ -71,12 +71,12 @@ export default function IdeasTab() {
   const selectedIdea = ideas.find(i => i.id === selectedId)
 
   return (
-    <div className="flex gap-0 h-[calc(100vh-160px)] relative">
+    <div className="flex flex-col md:flex-row gap-0 md:h-[calc(100vh-160px)] relative">
       {/* Decorative glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-gradient-to-r from-amber-500/5 to-violet-500/5 blur-[100px] z-0 pointer-events-none" />
 
-      {/* Left rail */}
-      <div className="relative z-10 w-[38%] flex flex-col gap-3 pr-4 border-r border-black/5">
+      {/* Left rail — full width on mobile; hidden on mobile once an idea is open */}
+      <div className={`relative z-10 w-full md:w-[38%] flex-col gap-3 md:pr-4 md:border-r border-black/5 ${selectedId ? "hidden md:flex" : "flex"}`}>
         {/* Search */}
         <div className="relative">
           <Icon name="search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
@@ -175,8 +175,18 @@ export default function IdeasTab() {
         </div>
       </div>
 
-      {/* Detail pane */}
-      <div className="relative z-10 flex-1 pl-6">
+      {/* Detail pane — full width on mobile; hidden on mobile until an idea is open */}
+      <div className={`relative z-10 w-full md:flex-1 mt-4 md:mt-0 md:pl-6 ${selectedId ? "block" : "hidden md:block"}`}>
+        {/* Mobile-only back button */}
+        {selectedId && (
+          <button
+            onClick={() => setSelectedId(null)}
+            className="md:hidden flex items-center gap-1.5 mb-3 text-on-surface-variant hover:text-primary font-label-caps text-label-caps transition-colors"
+          >
+            <Icon name="arrow_back" size={16} />
+            All ideas
+          </button>
+        )}
         <AnimatePresence mode="wait">
           <motion.div
             key={selectedId ?? "empty"}
@@ -184,7 +194,7 @@ export default function IdeasTab() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -4 }}
             transition={{ duration: 0.2 }}
-            className="h-full"
+            className="md:h-full"
           >
             <IdeaDetail
               ideaId={selectedId}

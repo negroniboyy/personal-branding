@@ -19,6 +19,8 @@ logger = get_logger("instagram_frameworks")
 SCRIPT_DIR  = Path(__file__).parent.resolve()
 PROMPTS_DIR = SCRIPT_DIR / "prompts"
 PROMPT_PATH = PROMPTS_DIR / "script_writer.txt"
+IDEA_PROMPT_PATH = PROMPTS_DIR / "script_writer_idea.txt"
+VOICE_BLOCK_PATH = SCRIPT_DIR.parent.parent / "brandguide" / "voice_dna_block.txt"
 
 DB_PATH = Path(__file__).parent.parent.parent / "NOTION DIARY FETCHER" / "data" / "notion_diary.db"
 if not DB_PATH.exists():
@@ -380,26 +382,13 @@ def build_freeform_script_prompt(
     idea_prompt: str,
     framework: dict,
 ) -> str:
-    return (
-        "You are a short-form video scriptwriter. Write a scene-by-scene Instagram Reel script "
-        "based entirely on the idea below. Apply the structural framework provided.\n\n"
-        "**OUTPUT FORMAT — plain voiceover text only, no labels or headers.**\n\n"
-        "Write only the spoken words. No scene numbers, no timestamps, no 'VOICEOVER:' labels.\n"
-        "Separate each scene's lines with a blank line.\n\n"
-        "---\n\n"
-        "**RULES:**\n"
-        "- Total script duration must match the framework's duration target\n"
-        "- Number of scenes must match the framework's scene count\n"
-        "- Honor the framework's pacing: fast = short punchy lines, slow = space for pauses\n"
-        "- Hook (SCENE 1) must match the framework's hook type\n"
-        "- CTA scene must match the framework's cta type\n"
-        "- Tone must match the framework's tone throughout\n"
-        "- The IDEA is the only source of truth — do not invent unrelated facts\n"
-        "- Write the VOICEOVER as words the creator will actually say out loud\n\n"
-        "---\n\n"
-        f"IDEA (this is the entire source material — write from it):\n{idea_prompt}\n\n"
-        "---\n\n"
-        f"FRAMEWORK:\n{_format_framework(framework)}"
+    template = IDEA_PROMPT_PATH.read_text(encoding="utf-8")
+    voice_block = VOICE_BLOCK_PATH.read_text(encoding="utf-8")
+    return llm_client.inject(
+        template,
+        VOICE_BLOCK=voice_block,
+        FRAMEWORK=_format_framework(framework),
+        IDEA=idea_prompt,
     )
 
 

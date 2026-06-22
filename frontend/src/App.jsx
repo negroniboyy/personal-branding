@@ -54,7 +54,7 @@ export default function App() {
       <MobileNav activeTab={tab} onTabChange={handleTabChange} />
 
       <main className="md:pl-[300px] min-h-screen pb-20 md:pb-0">
-        <div className="max-w-[900px] mx-auto px-gutter py-section_padding">
+        <div className={`mx-auto px-gutter py-section_padding ${tab === "ideas" ? "max-w-[1400px]" : "max-w-[900px]"}`}>
 
           {/* Page heading */}
           <motion.h1

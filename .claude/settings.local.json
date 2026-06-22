@@ -25,7 +25,19 @@
       "Bash(curl -s -X PATCH http://localhost:9000/reels/scripts/2/meta -H \"Content-Type: application/json\" -d '{\"asana_task_gid\": \"1215696637885914\"}')",
       "Bash(curl -s -X PATCH http://localhost:9000/reels/scripts/3/meta -H \"Content-Type: application/json\" -d '{\"asana_task_gid\": \"1215696637905264\"}')",
       "Bash(sqlite3 \"/Users/maxkiyuna/Documents/personal_brand/NOTION DIARY FETCHER/data/notion_diary.db\" \"SELECT \\(SELECT COUNT\\(*\\) FROM reel_scripts WHERE status='queued'\\) + \\(SELECT COUNT\\(*\\) FROM content_drafts WHERE status='queued'\\) AS total_queued;\")",
-      "Bash(curl -s --max-time 5 http://localhost:9000/health)"
+      "Bash(curl -s --max-time 5 http://localhost:9000/health)",
+      "Bash(sqlite3 \"NOTION DIARY FETCHER/data/notion_diary.db\" \"SELECT \\(SELECT COUNT\\(*\\) FROM reel_scripts WHERE status='queued'\\) + \\(SELECT COUNT\\(*\\) FROM content_drafts WHERE status='queued'\\);\")",
+      "Bash(curl -s -m 3 http://localhost:9000/ -o /dev/null -w \"%{http_code}\\\\n\")",
+      "Bash(sqlite3 \"NOTION DIARY FETCHER/data/notion_diary.db\" \"SELECT 'queued', \\(SELECT COUNT\\(*\\) FROM reel_scripts WHERE status='queued'\\) + \\(SELECT COUNT\\(*\\) FROM content_drafts WHERE status='queued'\\);\" \"SELECT 'ready_ahead', \\(SELECT COUNT\\(*\\) FROM reel_scripts WHERE status IN \\('approved','recorded'\\)\\) + \\(SELECT COUNT\\(*\\) FROM content_drafts WHERE status IN \\('approved','recorded'\\)\\);\" \"SELECT 'rows_needing_asana_reels', COUNT\\(*\\) FROM reel_scripts WHERE status IN \\('approved','recorded'\\) AND asana_task_gid IS NULL;\" \"SELECT 'rows_needing_asana_drafts', COUNT\\(*\\) FROM content_drafts WHERE status IN \\('approved','recorded'\\) AND asana_task_gid IS NULL;\" \"SELECT 'posted_needs_complete_reels', COUNT\\(*\\) FROM reel_scripts WHERE status='posted' AND asana_task_gid IS NOT NULL;\" \"SELECT 'posted_needs_complete_drafts', COUNT\\(*\\) FROM content_drafts WHERE status='posted' AND asana_task_gid IS NOT NULL;\" \"SELECT 'killed_needs_complete_reels', COUNT\\(*\\) FROM reel_scripts WHERE status='killed' AND asana_task_gid IS NOT NULL;\" \"SELECT 'killed_needs_complete_drafts', COUNT\\(*\\) FROM content_drafts WHERE status='killed' AND asana_task_gid IS NOT NULL;\")",
+      "Bash(sqlite3 -header -column \"NOTION DIARY FETCHER/data/notion_diary.db\" \"SELECT id, status, asana_task_gid, substr\\(generated_text,1,40\\) FROM reel_scripts WHERE status IN \\('approved','recorded'\\);\" \"SELECT id, status, asana_task_gid, substr\\(generated_text,1,40\\) FROM content_drafts WHERE status IN \\('approved','recorded'\\);\")",
+      "Bash(sqlite3 -separator '|||' \"NOTION DIARY FETCHER/data/notion_diary.db\" \"SELECT id, generated_text FROM reel_scripts WHERE id IN \\(9,11\\);\")",
+      "Bash(sqlite3 \"NOTION DIARY FETCHER/data/notion_diary.db\" \"UPDATE reel_scripts SET asana_task_gid='1215777397965828' WHERE id=9; UPDATE reel_scripts SET asana_task_gid='1215768738837723' WHERE id=11;\")",
+      "Bash(sqlite3 -header -column \"NOTION DIARY FETCHER/data/notion_diary.db\" \"SELECT id, status, asana_task_gid FROM reel_scripts WHERE id IN \\(9,11\\);\")",
+      "Bash(sqlite3 \"NOTION DIARY FETCHER/data/notion_diary.db\" \"SELECT \\(SELECT COUNT\\(*\\) FROM reel_scripts WHERE status IN \\('approved','recorded'\\)\\) + \\(SELECT COUNT\\(*\\) FROM content_drafts WHERE status IN \\('approved','recorded'\\)\\);\")",
+      "Bash(echo \"---EXIT: $?\")",
+      "Bash(sqlite3 data/notion_diary.db \"SELECT \\(SELECT COUNT\\(*\\) FROM reel_scripts WHERE status='queued'\\) + \\(SELECT COUNT\\(*\\) FROM content_drafts WHERE status='queued'\\) AS total_queued;\")",
+      "Bash(sqlite3 data/notion_diary.db ' *)",
+      "Bash(sqlite3 'NOTION DIARY FETCHER/data/notion_diary.db' ' *)"
     ]
   }
 }
