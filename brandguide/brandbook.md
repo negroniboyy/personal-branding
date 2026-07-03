@@ -1,147 +1,58 @@
-# PersonalBrand
+# Brandbook — Positioning Source of Truth
+_Rewritten 2026-07-03 from the live interview. This is THE positioning doc; `voice_dna.md` is THE voice doc; `voice_dna_block.txt` is the prompt-injection kit. Nothing else in `brandguide/` outranks these three._
 
-## Positioning
+## Value proposition
 
-This brand is built on honest progress, firm identity, and steady execution.
+**Documenting reality with intent.**
 
-- Identity-first, not trend-first
-- Data-informed, not algorithm-obsessed
-- Reflective, not performative
-- Structured, not rigid
-- In progress, not presenting a finished version
+Someone in the middle of it — building a career, training a body, engineering his own systems — who writes down what he actually notices. Not a coach, not an influencer, not a finished version. The audience observes a real person making real decisions; they are never lectured.
 
-The operating standard is simple: build trust through consistency, clarity, and real experience.
+The counter-position that defines him: **away from the noise.** No over-acted content, no over-complicated routines, nothing that makes a viewer feel they're doing less. His content should leave people feeling *capable*.
 
-## Core Audience
+## The three pillars
 
-### Instagram
+| # | Pillar | What it covers | Proof it's real |
+|---|--------|----------------|-----------------|
+| 1 | **IT/AI early career, learning in public** | Navigating Japanese IT (hakken contracts, recruiters, negotiation, next-role criteria), AI implementation from the trench, presentation skills incl. Japanese, honest inner thoughts about all of it | Doing the things "I was always just reading in books" — live, right now |
+| 2 | **Runner / athlete** | Full-marathon training, run clubs + solo focus, 30–40 km/week, knee-protective strength work, enjoying new activities | "I even built a personal software to track my training — that's how serious I am" |
+| 3 | **Systems for living** | Habits, routines, finance discipline, iteration applied to life, ego/attachment as noise, when to let go, clarity over effort | His biggest note cluster; "project management 101, applies to everything" |
 
-- Other athletes
-- People trying to find their best version
+Pillars are not silos — the cross-bleed IS the brand (software built for running; negotiation as a learned system; training as the metaphor for everything). No niche, on purpose: many interests, hopes, dreams, insecurities — kept very human.
 
-Primary outcome:
-- Community growth
-- Long-term credibility
+## Audience
 
-### LinkedIn
+**One person on the other side of the camera:** someone who works hard, is prone to comparing themselves to performative super-people online, and wants permission to make what feels right — better decisions, less noise. On LinkedIn that person wears a professional skin (peers, recruiters, founders); on Instagram they wear a training skin (athletes, people finding their best version).
 
-- Professionals
-- Recruiters
-- Founders
+## Production tiers (each idea gets exactly one)
 
-Primary outcome:
-- Network growth
+| Tier | What it is | Voice register (see `voice_dna.md`) | Effort |
+|------|-----------|--------------------------------------|--------|
+| **Scripted headshot** | Well-edited, properly scripted talking-head video | Sharpened register — foil hooks, self-directed questions, systems close | High |
+| **Music-beat edit** | Fun cuts on a beat; visuals carry it | Minimal words — on-screen text only, honest and plain | Medium |
+| **Raw talking head** | No heavy research, openly talking to audience | Unscripted register — talking points, not word-for-word scripts | Low |
 
-## Cross-Channel Identity
+The mix is deliberate: it keeps a shippable cadence across effort levels and kills the perfectionism stall.
 
-- Curious and observant
-- Calm under pressure
-- Honest about gaps, effort, and progress
-- Interested in systems, discipline, and lived experience
-- Serious without sounding heavy
+## Platform roles
 
-## Guardrails
+- **Instagram** — what life looks and feels like: movement, training, environment, quiet reflection, subtle progress. Lived moments over designed narratives.
+- **LinkedIn** — what he's learning, building, and noticing through work: learning in public, real IT/work situations, career direction ("thinking out loud, but structured — no strong conclusions, just direction"), building/projects as process, systems thinking, reflection posts "like a cleaned-up diary entry." Same week, same material: Instagram gets the moment, LinkedIn gets what he noticed in it.
 
-These rules apply everywhere.
+## Guardrails (apply everywhere)
 
-- No trend-chasing
-- No motivational preaching
-- No fake authority
-- No ragebait or hot takes
+- No trend-chasing, no motivational preaching, no fake authority, no ragebait
+- No manufactured struggle or forced vulnerability — he is in a momentum season and content reflects that honestly
+- No performative optimization theater (elaborate routines presented as the point)
+- No generic advice detached from lived experience; curious not authoritative, reflective not motivational
 - No overly private personal content
-- No generic advice detached from real experience
-- No polished self-branding that feels louder than the truth
+- Every piece passes human review in Studio before publish; AI drafts, never approves
 
-## Tone
-
-The default tone is:
-
-- Honest
-- Firm
-- Reflective
-- Non-performative
-- Clear
-- Grounded
-
-The brand should sound like someone documenting reality with intent, not selling an image.
-
-## Instagram Role
-
-Instagram shows what life looks and feels like.
-
-### Themes
-
-- Movement, training, and physical rhythm
-- Daily life without optimization theater
-- Social life and environment
-- Quiet reflection
-- Subtle progress
-
-### Content rules
-
-- Prioritize lived moments over designed narratives
-- Show routine without glorifying it
-- Keep captions short to medium and simple
-- Let progress show up inside the story, not as a headline
-- Daily Stories are light-touch and observational
-
-### Avoid on Instagram
-
-- Stats as the main point
-- Discipline preaching
-- Performative productivity
-- Trend audio or trend formatting for its own sake
-
-## LinkedIn Role
-
-LinkedIn shows what you are learning, building, and noticing through work.
-
-### Themes
-
-- Learning in public
-- Real work experience
-- Career direction and standards
-- Building and projects
-- Systems thinking
-- Calm reflection on work and growth
-
-### Content rules
-
-- Write from direct experience and partial understanding
-- Explain clearly without acting like the expert in the room
-- Share process, mistakes, observations, and adjustments
-- Prefer grounded reflection over tactical “tips”
-- Keep confidence in standards, but humility in voice
-
-### Avoid on LinkedIn
-
-- Thought-leader performance
-- Empty frameworks
-- Overstated certainty
-- Advice that sounds borrowed instead of lived
-
-## Operating Rules For Content
-
-- Monthly target: 4 LinkedIn posts and 4 Instagram feed posts
-- Instagram Stories aim for daily presence, tracked as a weekly routine
-- Every content item passes a human review before publish
-- Plane tracks execution and due dates
-- Google Sheets track planning and consistency
-- Google Docs hold strategy, briefs, drafts, and review notes
-
-## GPT Usage Rules
-
-- GPTs can help structure, draft, analyze, and organize
-- GPTs cannot approve content
-- GPTs cannot publish content
-- GPT outputs must always be checked against this brandbook before use
-
-## Canonical Decision Filter
-
-Before approving a piece of content, ask:
+## Canonical decision filter (before approving any piece)
 
 1. Does this sound like a real observation or a manufactured performance?
-2. Does this strengthen long-term identity more than short-term reach?
-3. Would this still feel right if engagement were low?
-4. Is the tone firm and honest without becoming preachy or loud?
-5. Does this reflect actual life, work, training, or learning?
+2. Would this still feel right if engagement were zero?
+3. Would Max feel natural saying this to camera? (The shoot test — the one that failed v1.)
+4. Does it leave the viewer feeling capable, or feeling behind?
+5. Does it reflect actual life, work, training, or learning — with zero invented details?
+
+If any answer is no — cut, not polish.

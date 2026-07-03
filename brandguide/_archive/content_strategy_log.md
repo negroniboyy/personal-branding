@@ -2,6 +2,8 @@
 
 > Living document. Claude (strategist mode) updates this after every generation/review pass.
 > This is the **judgment layer**: what we're learning about Max's voice, which frameworks fit
+>
+> **2026-06-22:** Campaign 01 "Build Like a Body" launched — see end of file + `campaign_01_builder_in_public.md`.
 > which stories, and what makes his storytelling land. The prompt (`prompts/script_writer.txt`)
 > is the *engine*; this doc is the *taste*.
 >

@@ -1,4 +1,7 @@
 # Content Creation Workflow
+
+> ⚠️ **SUPERSEDED (2026-07-03):** this describes the retired diary/story-first loop. The v3 workflow (Notion ideas DB → tiered drafts) is defined in `handoff/blueprint_v3.0_pbs_reboot.md`. The time-caps principle below is still valid; everything else is stale.
+
 _Updated: 2026-05-27 | Target: 4 LinkedIn + 4 Instagram/month_
 
 ---

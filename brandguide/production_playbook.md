@@ -1,5 +1,7 @@
 # Production Playbook — Instagram Reels
 
+> ⚠️ **SUPERSEDED (2026-07-03):** built around the retired ReelWriter/story-first path and the archived `content_strategy_log.md`. The v3 loop is defined in `handoff/blueprint_v3.0_pbs_reboot.md`.
+
 > The repeatable loop for shipping reels through the existing frontend (ReelWriter tab).
 > Pairs with `brandguide/content_strategy_log.md` (the verdict log / lessons).
 > Generation is free (`gpt-oss-120b:free`) and runs against your local API.

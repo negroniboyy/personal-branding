@@ -37,7 +37,15 @@
       "Bash(echo \"---EXIT: $?\")",
       "Bash(sqlite3 data/notion_diary.db \"SELECT \\(SELECT COUNT\\(*\\) FROM reel_scripts WHERE status='queued'\\) + \\(SELECT COUNT\\(*\\) FROM content_drafts WHERE status='queued'\\) AS total_queued;\")",
       "Bash(sqlite3 data/notion_diary.db ' *)",
-      "Bash(sqlite3 'NOTION DIARY FETCHER/data/notion_diary.db' ' *)"
+      "Bash(sqlite3 'NOTION DIARY FETCHER/data/notion_diary.db' ' *)",
+      "Bash(sqlite3 \"NOTION DIARY FETCHER/data/notion_diary.db\" \"SELECT generated_text, caption, cta FROM reel_scripts WHERE id=28;\")",
+      "Bash(sqlite3 data/notion_diary.db \"SELECT \\(SELECT COUNT\\(*\\) FROM reel_scripts WHERE status='queued'\\) + \\(SELECT COUNT\\(*\\) FROM content_drafts WHERE status='queued'\\);\")",
+      "Bash(sqlite3 data/notion_diary.db \"SELECT id, generated_text, caption, cta FROM reel_scripts WHERE id=28;\")",
+      "Bash(sqlite3 \"NOTION DIARY FETCHER/data/notion_diary.db\" \"UPDATE reel_scripts SET asana_task_gid='1216056555420581' WHERE id=28;\")",
+      "Bash(echo \"exit code: $?\")",
+      "Bash(sqlite3 \"NOTION DIARY FETCHER/data/notion_diary.db\" \"SELECT COUNT\\(*\\) FROM reel_scripts WHERE status IN \\('approved','recorded'\\) UNION ALL SELECT COUNT\\(*\\) FROM content_drafts WHERE status IN \\('approved','recorded'\\);\")",
+      "Bash(sqlite3 \"/Users/maxkiyuna/Documents/personal_brand/NOTION DIARY FETCHER/data/notion_diary.db\" \"SELECT \\(SELECT COUNT\\(*\\) FROM reel_scripts WHERE status='queued'\\) + \\(SELECT COUNT\\(*\\) FROM content_drafts WHERE status='queued'\\) AS total_queued, \\(SELECT COUNT\\(*\\) FROM reel_scripts WHERE status='queued'\\) AS reel_queued, \\(SELECT COUNT\\(*\\) FROM content_drafts WHERE status='queued'\\) AS draft_queued;\")",
+      "Bash(sqlite3 \"/Users/maxkiyuna/Documents/personal_brand/NOTION DIARY FETCHER/data/notion_diary.db\" \"SELECT COUNT\\(*\\) FROM reel_scripts WHERE status IN \\('approved','recorded'\\); SELECT COUNT\\(*\\) FROM content_drafts WHERE status IN \\('approved','recorded'\\);\")"
     ]
   }
 }
