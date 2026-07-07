@@ -5,15 +5,13 @@ const NAV_ITEMS = [
   { id: "studio",      label: "Studio",     icon: "rocket_launch" },
   { id: "reels",       label: "Reels",      icon: "movie_edit"   },
   { id: "writer",      label: "Writer",     icon: "edit_note"    },
-  { id: "narrative",   label: "Narrative",  icon: "account_tree" },
   { id: "ideas",       label: "Ideas",      icon: "lightbulb"    },
-  { id: "diary",       label: "Diary",      icon: "auto_stories" },
   { id: "frameworks",  label: "Frames",     icon: "schema"       },
 ]
 
 export default function MobileNav({ activeTab, onTabChange }) {
   return (
-    <nav className="fixed bottom-0 left-0 w-full z-50 grid grid-cols-7 md:hidden items-stretch px-1 py-1.5 glass-panel border-t border-black/5 shadow-lg bg-white/80">
+    <nav className="fixed bottom-0 left-0 w-full z-50 grid grid-cols-5 md:hidden items-stretch px-1 py-1.5 glass-panel border-t border-black/5 shadow-lg bg-white/80">
       <LayoutGroup>
         {NAV_ITEMS.map((item) => {
           const isActive = activeTab === item.id

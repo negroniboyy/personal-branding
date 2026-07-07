@@ -1,0 +1,27 @@
+creator: '@NKIRKNZ'
+source_file: beatedit4.MP4
+hook_type: bold text overlay on action shot
+tone: energetic
+color_system: red text for introductory statement, white text for day labels; red
+  signals emphasis, white for labeling
+shot_pattern: wide → macro → macro → macro → macro → macro
+beats:
+- shot: wide
+  text_guess: Fit For the Week.
+- shot: macro
+  text_guess: Mon
+- shot: macro
+  text_guess: Wed
+- shot: macro
+  text_guess: Thur
+- shot: macro
+  text_guess: Sat
+- shot: macro
+  text_guess: Sun
+description: A beat-edit framework using bold text overlays on dynamic action shots
+  to present a weekly progression, ideal for fitness or habit-tracking content.
+fits_topics:
+- fitness
+- weekly routine
+- motivation
+- self-improvement

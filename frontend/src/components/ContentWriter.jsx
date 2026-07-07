@@ -1,8 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
-  fetchFrameworks,
-  postRecommendations,
   postGenerate,
   fetchDrafts,
   fetchDraft,
@@ -13,88 +11,53 @@ import {
 import GlassPanel from "./ui/GlassPanel.jsx"
 import PrimaryButton from "./ui/PrimaryButton.jsx"
 import Icon from "./ui/Icon.jsx"
-import DomainChips from "./DomainChips.jsx"
-import StoryPreview from "./StoryPreview.jsx"
 import { ModelSelector } from "./ModelSelector.jsx"
-import { DOMAINS } from "../lib/domains.js"
-import { frameworkLabel } from "../lib/frameworkLabel.js"
+import { useJob } from "../lib/useJob.js"
 
-export default function ContentWriter({ initialStory }) {
-  const [stories, setStories] = useState([])
-  const [frameworks, setFrameworks] = useState([])
-  const [selectedStoryId, setSelectedStoryId] = useState(null)
-  const [selectedFrameworkId, setSelectedFrameworkId] = useState(null)
+export default function ContentWriter() {
   const [ideaPrompt, setIdeaPrompt] = useState("")
-  const [manualOverride, setManualOverride] = useState(false)
   const [drafts, setDrafts] = useState([])
   const [activeDraft, setActiveDraft] = useState(null)
-  const [generating, setGenerating] = useState(false)
-  const [loadingRecs, setLoadingRecs] = useState(false)
+  const [jobId, setJobId] = useState(null)
   const [editedText, setEditedText] = useState("")
   const [saving, setSaving] = useState(false)
   const [deletingId, setDeletingId] = useState(null)
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState(null)
-  const [domain, setDomain] = useState(null)
-  const [selectedModel, setSelectedModel] = useState("openai/gpt-oss-120b:free")
-  const appliedInitial = useRef(false)
+  const [selectedModel, setSelectedModel] = useState("google/gemma-4-26b-a4b-it")
 
-  const loadRecommendations = useCallback(async (idea, activeDomain) => {
-    setLoadingRecs(true)
-    setError(null)
-    try {
-      const data = await postRecommendations({ idea_prompt: idea || null, top_n: 200, domain: activeDomain ?? null })
-      let storyList = data.stories || []
-      const pinInitial = initialStory && !appliedInitial.current
-      if (pinInitial && !storyList.some(s => String(s.id) === String(initialStory.id))) {
-        storyList = [initialStory, ...storyList]
-      }
-      setStories(storyList)
-      setFrameworks(data.frameworks || [])
-      if (pinInitial) {
-        setSelectedStoryId(initialStory.id)
-        appliedInitial.current = true
-      } else if (!manualOverride && storyList.length > 0) {
-        setSelectedStoryId(storyList[0].id)
-      }
-      if (!manualOverride && data.frameworks.length > 0) setSelectedFrameworkId(data.frameworks[0].id)
-      setManualOverride(false)
-    } catch (e) {
-      setError(e.message)
-    } finally {
-      setLoadingRecs(false)
-    }
-  }, [manualOverride, initialStory])
+  const { job } = useJob(jobId, {
+    onDone: (draft) => {
+      setActiveDraft(draft)
+      setEditedText(draft.generated_text)
+      setJobId(null)
+      loadDrafts()
+    },
+    onError: (msg) => { setError(msg); setJobId(null) },
+  })
+  const generating = !!jobId
 
   const loadDrafts = async () => {
     try { setDrafts(await fetchDrafts()) } catch { /* non-blocking */ }
   }
 
-  useEffect(() => { loadRecommendations("", null); loadDrafts() }, [])
+  useEffect(() => { loadDrafts() }, [])
 
-  const isFreeform = selectedStoryId === "__none__"
-  const canGenerate = selectedFrameworkId && (isFreeform ? ideaPrompt.trim() : selectedStoryId)
+  const canGenerate = ideaPrompt.trim()
 
   const handleGenerate = async () => {
     if (!canGenerate) return
-    setGenerating(true)
     setError(null)
     setActiveDraft(null)
     try {
-      const result = await postGenerate({
-        story_node_id: isFreeform ? null : selectedStoryId,
-        framework_id: selectedFrameworkId,
+      const { job_id } = await postGenerate({
         idea_prompt: ideaPrompt || null,
         model: selectedModel,
-        provider: selectedModel.startsWith("ollama:") ? "ollama" : "openrouter",
+        provider: "openrouter",
       })
-      setActiveDraft(result)
-      setEditedText(result.generated_text)
-      await loadDrafts()
+      setJobId(job_id)
     } catch (e) {
       setError(e.message)
-    } finally {
-      setGenerating(false)
     }
   }
 
@@ -153,9 +116,6 @@ export default function ContentWriter({ initialStory }) {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const selectedStory = stories.find(s => String(s.id) === String(selectedStoryId))
-  const selectedFramework = frameworks.find(f => String(f.id) === String(selectedFrameworkId))
-
   return (
     <div className="flex flex-col gap-8 relative">
       {/* Decorative glow blob */}
@@ -175,68 +135,8 @@ export default function ContentWriter({ initialStory }) {
           />
         </GlassPanel>
 
-        {/* Domain filter */}
-        <DomainChips
-          domains={DOMAINS}
-          selected={domain}
-          onChange={(d) => {
-            setDomain(d)
-            loadRecommendations(ideaPrompt, d)
-          }}
-        />
-
-        {/* Story + Framework pickers */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="flex flex-col gap-2">
-            <label className="font-label-caps text-label-caps text-on-surface-variant">STORY</label>
-            <select
-              value={selectedStoryId ?? ""}
-              onChange={e => { setSelectedStoryId(e.target.value); setManualOverride(true) }}
-              className="glass-panel rounded-lg px-4 py-3 font-body text-body text-on-surface appearance-none focus:border-primary outline-none border-black/5"
-            >
-              <option value="__none__">— No story (use idea only) —</option>
-              {stories.map(s => (
-                <option key={s.id} value={s.id}>
-                  {(s.title || s.conflict_node || s.id).replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase())}
-                </option>
-              ))}
-            </select>
-            {isFreeform && (
-              <p className="font-label-caps text-[10px] text-primary px-1">Idea hint is required — will be used as source</p>
-            )}
-          </div>
-          <div className="flex flex-col gap-2">
-            <label className="font-label-caps text-label-caps text-on-surface-variant">FRAMEWORK</label>
-            <select
-              value={selectedFrameworkId ?? ""}
-              onChange={e => { setSelectedFrameworkId(e.target.value); setManualOverride(true) }}
-              className="glass-panel rounded-lg px-4 py-3 font-body text-body text-on-surface appearance-none focus:border-primary outline-none border-black/5"
-            >
-              {frameworks.length === 0 && <option value="">No frameworks loaded</option>}
-              {frameworks.map(f => (
-                <option key={f.id} value={f.id}>{frameworkLabel(f, "linkedin")}</option>
-              ))}
-            </select>
-            {selectedFramework && (
-              <p className="font-label-caps text-[10px] text-on-surface-variant px-1">{selectedFramework.hook_type} · {selectedFramework.tone}</p>
-            )}
-          </div>
-        </div>
-
-        {/* Selected story preview */}
-        {!isFreeform && selectedStory && <StoryPreview story={selectedStory} />}
-
         {/* Actions row */}
         <div className="flex gap-3 flex-wrap items-center">
-          <motion.button
-            onClick={() => loadRecommendations(ideaPrompt, domain)}
-            disabled={loadingRecs}
-            whileTap={{ scale: 0.98 }}
-            className="flex-1 glass-panel text-primary py-3 px-5 rounded-xl font-label-caps text-label-caps flex items-center justify-center gap-2 hover:bg-white transition-colors border-primary/20 disabled:opacity-40"
-          >
-            <Icon name={loadingRecs ? "sync" : "auto_awesome"} size={16} />
-            {loadingRecs ? "Loading..." : "Get Recommendations"}
-          </motion.button>
           <ModelSelector
             task="generate_linkedin_post"
             value={selectedModel}
@@ -248,9 +148,12 @@ export default function ContentWriter({ initialStory }) {
             icon={generating ? "hourglass_top" : "temp_preferences_custom"}
             className="flex-1"
           >
-            {generating ? "Generating..." : "Generate Draft"}
+            {generating ? (job?.status === "running" ? "Generating..." : "Queued...") : "Generate Draft"}
           </PrimaryButton>
         </div>
+        <p className="font-label-caps text-[10px] text-on-surface-variant -mt-2 px-1">
+          The framework is picked automatically. You can leave this page — generation keeps running.
+        </p>
 
         {error && (
           <div className="flex items-center gap-2 text-error font-label-caps text-label-caps">
@@ -324,6 +227,12 @@ export default function ContentWriter({ initialStory }) {
                     </motion.div>
                   ) : activeDraft ? (
                     <motion.div key="draft" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                      {activeDraft.framework_id && (
+                        <p className="font-label-caps text-[10px] text-on-surface-variant italic mb-3">
+                          Framework: {activeDraft.framework_id}
+                          {activeDraft.framework_pick_reason ? ` — ${activeDraft.framework_pick_reason}` : ""}
+                        </p>
+                      )}
                       <textarea
                         value={editedText}
                         onChange={e => setEditedText(e.target.value)}
@@ -334,7 +243,7 @@ export default function ContentWriter({ initialStory }) {
                   ) : (
                     <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center py-16 gap-2 text-center">
                       <Icon name="edit_note" size={32} className="text-outline-variant" />
-                      <span className="font-body text-body text-on-surface-variant">Select a story + framework and click Generate Draft</span>
+                      <span className="font-body text-body text-on-surface-variant">Write an idea and click Generate Draft</span>
                     </motion.div>
                   )}
                 </AnimatePresence>

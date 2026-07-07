@@ -1,11 +1,9 @@
-import json
 import subprocess
 import sys
 from dataclasses import asdict
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Optional
 
@@ -17,7 +15,7 @@ from shared.lifecycle import (
 )
 from shared.md_mirror import delete_draft_md, write_draft_md
 from .db import get_connection, run_migration
-from .models import RecommendationRequest, GenerateRequest, ContentDraft
+from .models import RecommendationRequest
 from . import service, repository
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -35,11 +33,10 @@ class RecommendationRequestBody(BaseModel):
 
 
 class GenerateRequestBody(BaseModel):
-    story_node_id: Optional[str] = None
-    framework_id: str
+    framework_id: Optional[str] = None
     idea_prompt: Optional[str] = None
-    provider: str = "ollama"
-    model: str = "gemma3:latest"
+    provider: str = "openrouter"
+    model: Optional[str] = None  # None -> use config/openrouter_models.yaml cascade
 
 
 class PatchDraftBody(BaseModel):
@@ -88,81 +85,17 @@ def get_recommendations(body: RecommendationRequestBody):
 
 @router.post("/generate")
 def generate_draft(body: GenerateRequestBody):
-    req = GenerateRequest(
-        story_node_id=body.story_node_id,
-        framework_id=body.framework_id,
-        idea_prompt=body.idea_prompt,
-        provider=body.provider,
-        model=body.model,
-    )
-    with get_connection() as conn:
-        try:
-            result = service.generate_draft(conn, req)
-        except ValueError as exc:
-            raise HTTPException(status_code=404, detail=str(exc))
-        except NotImplementedError as exc:
-            raise HTTPException(status_code=501, detail=str(exc))
-    return asdict(result)
+    if not body.idea_prompt:
+        raise HTTPException(status_code=422, detail="idea_prompt is required")
 
-
-@router.post("/generate/stream")
-async def generate_draft_stream(body: GenerateRequestBody):
-    from openrouter.router import stream as llm_stream
-
-    req = GenerateRequest(
-        story_node_id=body.story_node_id,
-        framework_id=body.framework_id,
-        idea_prompt=body.idea_prompt,
-        provider=body.provider,
-        model=body.model,
-    )
-    with get_connection() as conn:
-        try:
-            prompt, framework_id, story_node_id_saved = service.prepare_prompt(conn, req)
-        except ValueError as exc:
-            raise HTTPException(status_code=404, detail=str(exc))
-
-    messages = [{"role": "user", "content": prompt}]
-    override = None
-    if body.provider == "openrouter" and body.model:
-        override = body.model
-    elif body.provider == "ollama":
-        override = f"ollama:{body.model}"
-
-    async def event_generator():
-        try:
-            async for chunk in llm_stream("generate_linkedin_post", messages, max_tokens=1024, override_model=override):
-                if chunk["type"] == "done":
-                    conn2 = get_connection()
-                    try:
-                        draft = ContentDraft(
-                            story_node_id=story_node_id_saved,
-                            framework_id=framework_id,
-                            idea_prompt=body.idea_prompt,
-                            generated_text=chunk["content"],
-                            model_used=chunk["model"],
-                        )
-                        draft_id = repository.save_draft(conn2, draft)
-                        try:
-                            conn2.execute(
-                                "UPDATE content_drafts SET cost_usd = ? WHERE id = ?",
-                                (chunk.get("cost_usd", 0.0), draft_id),
-                            )
-                            conn2.commit()
-                        except Exception:
-                            pass
-                        chunk["draft_id"] = draft_id
-                    finally:
-                        conn2.close()
-                yield f"data: {json.dumps(chunk)}\n\n"
-        except Exception as exc:
-            yield f"data: {json.dumps({'type': 'error', 'message': str(exc)})}\n\n"
-
-    return StreamingResponse(
-        event_generator(),
-        media_type="text/event-stream",
-        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
-    )
+    from jobs import queue as jobs_queue
+    job_id = jobs_queue.enqueue("generate_linkedin_draft", {
+        "idea_id": None,
+        "idea_prompt": body.idea_prompt,
+        "framework_id": body.framework_id,
+        "model": body.model,
+    })
+    return {"job_id": job_id}
 
 
 @router.get("/drafts")
@@ -176,7 +109,7 @@ def list_drafts(status: Optional[str] = None, limit: int = 100):
         rows = conn.execute(
             "SELECT id, story_node_id, framework_id, idea_prompt, generated_text, "
             "model_used, created_at, status, verdict, verdict_note, caption, cta, "
-            "asana_task_gid, posted_at "
+            "asana_task_gid, posted_at, framework_pick_reason "
             f"FROM content_drafts {where} ORDER BY created_at DESC LIMIT ?",
             params,
         ).fetchall()
@@ -192,6 +125,9 @@ def patch_draft_meta(draft_id: int, body: MetaBody):
             raise HTTPException(status_code=422, detail=str(exc))
     if not updated:
         raise HTTPException(status_code=404, detail="Draft not found")
+    if updated.get("idea_id"):
+        from jobs import queue as jobs_queue
+        jobs_queue.enqueue("push_notion_status", {"idea_id": updated["idea_id"]})
     return updated
 
 

@@ -2,49 +2,7 @@ import json
 import sqlite3
 from typing import Optional
 
-from .models import ContentDraft, Framework, StoryNode
-
-
-def get_story_nodes(
-    conn: sqlite3.Connection,
-    limit: int = 20,
-    min_worth_score: float = 0.0,
-    domain: Optional[str] = None,
-) -> list[StoryNode]:
-    filters = ["worth_score >= ?"]
-    params: list = [min_worth_score]
-
-    if domain:
-        filters.append("thematic_tags LIKE ?")
-        params.append(f"%{domain}%")
-
-    where = " AND ".join(filters)
-    params.append(limit)
-
-    rows = conn.execute(
-        f"""
-        SELECT id, conflict_node, user_state, desired_outcome,
-               the_bridge, thematic_tags, worth_score
-        FROM story_nodes
-        WHERE {where}
-        ORDER BY worth_score DESC
-        LIMIT ?
-        """,
-        params,
-    ).fetchall()
-    return [
-        StoryNode(
-            id=r["id"],
-            title=r["conflict_node"] or "",
-            user_state=r["user_state"] or "",
-            conflict_node=r["conflict_node"] or "",
-            desired_outcome=r["desired_outcome"] or "",
-            the_bridge=r["the_bridge"] or "",
-            thematic_tags=_parse_json_list(r["thematic_tags"]),
-            worth_score=r["worth_score"] or 0.0,
-        )
-        for r in rows
-    ]
+from .models import ContentDraft, Framework
 
 
 def get_frameworks(conn: sqlite3.Connection) -> list[Framework]:
@@ -71,34 +29,12 @@ def get_frameworks(conn: sqlite3.Connection) -> list[Framework]:
     ]
 
 
-def get_chunks_for_story(conn: sqlite3.Connection, story_node_id: str) -> list[str]:
-    rows = conn.execute(
-        """
-        SELECT c.chunk_text FROM chunks c
-        JOIN story_nodes sn ON sn.page_id = c.page_id
-        WHERE sn.id = ?
-        ORDER BY c.chunk_index
-        """,
-        (story_node_id,),
-    ).fetchall()
-    return [r["chunk_text"] for r in rows if r["chunk_text"]]
-
-
-def get_latest_weekly_index(conn: sqlite3.Connection) -> Optional[dict]:
-    row = conn.execute(
-        "SELECT * FROM weekly_index ORDER BY week_start DESC LIMIT 1"
-    ).fetchone()
-    if not row:
-        return None
-    return dict(row)
-
-
 def save_draft(conn: sqlite3.Connection, draft: ContentDraft) -> int:
     cur = conn.execute(
         """
         INSERT INTO content_drafts (story_node_id, framework_id, idea_prompt,
-                                    generated_text, model_used)
-        VALUES (?, ?, ?, ?, ?)
+                                    generated_text, model_used, framework_pick_reason)
+        VALUES (?, ?, ?, ?, ?, ?)
         """,
         (
             draft.story_node_id,
@@ -106,6 +42,7 @@ def save_draft(conn: sqlite3.Connection, draft: ContentDraft) -> int:
             draft.idea_prompt,
             draft.generated_text,
             draft.model_used,
+            draft.framework_pick_reason,
         ),
     )
     conn.commit()
@@ -116,7 +53,7 @@ def get_drafts(conn: sqlite3.Connection, limit: int = 20) -> list[ContentDraft]:
     rows = conn.execute(
         """
         SELECT id, story_node_id, framework_id, idea_prompt,
-               generated_text, model_used, created_at
+               generated_text, model_used, created_at, framework_pick_reason
         FROM content_drafts
         ORDER BY created_at DESC
         LIMIT ?
@@ -145,7 +82,7 @@ def get_draft(conn: sqlite3.Connection, draft_id: int) -> Optional[ContentDraft]
     row = conn.execute(
         """
         SELECT id, story_node_id, framework_id, idea_prompt,
-               generated_text, model_used, created_at
+               generated_text, model_used, created_at, framework_pick_reason
         FROM content_drafts WHERE id = ?
         """,
         (draft_id,),
@@ -162,6 +99,7 @@ def _row_to_draft(r: sqlite3.Row) -> ContentDraft:
         generated_text=r["generated_text"],
         model_used=r["model_used"],
         created_at=r["created_at"],
+        framework_pick_reason=r["framework_pick_reason"] if "framework_pick_reason" in r.keys() else None,
     )
 
 

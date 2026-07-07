@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { fetchIdeas, createIdea, deleteIdea } from "../ideasApi.js"
+import { fetchIdeas, createIdea, deleteIdea, syncNotionIdeas } from "../ideasApi.js"
 import IdeaDetail from "./IdeaDetail.jsx"
 import GlassPanel from "./ui/GlassPanel.jsx"
 import Icon from "./ui/Icon.jsx"
+import { useJob } from "../lib/useJob.js"
 
 export default function IdeasTab() {
   const [ideas, setIdeas] = useState([])
@@ -12,6 +13,8 @@ export default function IdeasTab() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [deletingId, setDeletingId] = useState(null)
+  const [syncJobId, setSyncJobId] = useState(null)
+  const [syncSummary, setSyncSummary] = useState(null)
 
   const loadIdeas = useCallback(async () => {
     try {
@@ -27,6 +30,30 @@ export default function IdeasTab() {
   useEffect(() => {
     loadIdeas()
   }, [loadIdeas])
+
+  const { job: syncJob } = useJob(syncJobId, {
+    onDone: (result) => {
+      setSyncSummary(result)
+      setSyncJobId(null)
+      loadIdeas()
+    },
+    onError: (msg) => {
+      setError(msg)
+      setSyncJobId(null)
+    },
+  })
+  const syncing = !!syncJobId
+
+  const handleSync = async () => {
+    setError(null)
+    setSyncSummary(null)
+    try {
+      const { job_id } = await syncNotionIdeas()
+      setSyncJobId(job_id)
+    } catch (e) {
+      setError(e.message)
+    }
+  }
 
   // Listen for "New Idea" sidebar button
   useEffect(() => {
@@ -97,6 +124,22 @@ export default function IdeasTab() {
           New Idea
         </button>
 
+        {/* Sync from Notion */}
+        <button
+          onClick={handleSync}
+          disabled={syncing}
+          className="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-on-surface-variant font-label-caps text-label-caps hover:bg-white/60 transition-colors disabled:opacity-50"
+        >
+          <Icon name="sync" size={14} className={syncing ? "animate-spin" : ""} />
+          {syncing ? (syncJob?.status === "running" ? "Syncing..." : "Queued...") : "Sync from Notion"}
+        </button>
+
+        {syncSummary && (
+          <div className="text-center font-label-caps text-[10px] text-on-surface-variant">
+            Pulled {syncSummary.pulled} — {syncSummary.created} new, {syncSummary.updated} updated
+          </div>
+        )}
+
         {error && (
           <div className="flex items-center gap-2 text-error font-label-caps text-label-caps text-xs">
             <Icon name="error" size={12} /> {error}
@@ -148,7 +191,7 @@ export default function IdeasTab() {
                         <p className={`font-body text-body truncate ${isActive ? "text-primary" : "text-on-surface"}`}>
                           {idea.title || <span className="italic text-on-surface-variant">Untitled</span>}
                         </p>
-                        <div className="flex items-center gap-2 mt-0.5">
+                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                           <span className="font-label-caps text-[10px] text-on-surface-variant">
                             {idea.draft_count} {idea.draft_count === 1 ? "draft" : "drafts"}
                           </span>
@@ -156,6 +199,26 @@ export default function IdeasTab() {
                           <span className="font-label-caps text-[10px] text-on-surface-variant">
                             {formatRecency(idea.updated_at)}
                           </span>
+                          {idea.notion_page_id && (
+                            <span className="px-1.5 py-0.5 rounded bg-black/5 font-label-caps text-[9px] text-on-surface-variant">
+                              Notion
+                            </span>
+                          )}
+                          {idea.pillar && (
+                            <span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary font-label-caps text-[9px]">
+                              {idea.pillar}
+                            </span>
+                          )}
+                          {idea.tier && (
+                            <span className="px-1.5 py-0.5 rounded bg-secondary/10 text-secondary font-label-caps text-[9px]">
+                              {idea.tier}
+                            </span>
+                          )}
+                          {(idea.channels || []).map(ch => (
+                            <span key={ch} className="px-1.5 py-0.5 rounded bg-black/5 font-label-caps text-[9px] text-on-surface-variant">
+                              {ch}
+                            </span>
+                          ))}
                         </div>
                       </div>
                     </button>

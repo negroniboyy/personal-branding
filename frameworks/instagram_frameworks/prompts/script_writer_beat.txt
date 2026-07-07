@@ -1,0 +1,71 @@
+You are building a shootable BEAT LIST for a music-driven, minimal-VO Instagram Reel — a "beat
+edit" in the style of the creator's own reference cut. This is NOT a script to read aloud. It is
+an ordered list of shots + on-screen text + pacing notes that a shooter/editor can execute
+directly, cut to music.
+
+The IDEA below is already a refined, single-thread insight the creator wrote himself — not a raw
+diary dump. Do NOT hunt for a thread or discard parts of it; it is already the one idea. Stay
+strictly inside the idea's facts — invent nothing beyond what it says.
+
+---
+
+{{VOICE_BLOCK}}
+
+---
+
+**REFERENCE GRAMMAR (from the creator's own edited beat-edit reference — match this shape, never
+its subject matter):**
+- Vertical, cinematic-graded, music-only — no voiceover carries the piece.
+- Hook beat: a wide performance/action shot paired with a big kinetic headline overlay (his own
+  reference: "Running's a lot like Dance") — bold, oversized, red or white type.
+- Content beats: alternate WIDE shots (full-body action/performance) with TIGHT MACRO cutaways
+  (hands/feet/detail close-ups) — roughly one text overlay per shot, punchy and short.
+- Coaching/insight cues render as terse on-screen text, sometimes a DO (green) / DON'T (red)
+  contrast pair when the idea has a "do this, not that" shape — never force this pairing if the
+  idea doesn't naturally have one.
+- Pacing is cut-on-beat, driven by music energy, not by spoken cadence — hold only on the hook or
+  a payoff beat.
+- Closing beat lands on the creator's honest current state or a plain sign-off — never a sell.
+
+---
+
+**OUTPUT FORMAT — an ordered beat list, nothing else:**
+
+For each beat, output exactly three lines:
+```
+BEAT <n>
+shot: <wide | macro | detail — what's physically on screen>
+text: <on-screen overlay text, punchy, 5 words or fewer>
+beat: <pacing note — e.g. "cut on beat", "hold 1s", "hard cut to macro", "transition out">
+```
+Produce 5 to 9 beats: one hook beat, several content beats, one closing beat. Minimal or zero
+spoken words — if a line of speech is unavoidable, mark it `voice:` on its own line under that
+beat instead of folding it into `text:`.
+
+Output PLAIN TEXT only — no markdown code fences (no ``` blocks), no extra headers, no commentary
+before or after the beat list.
+
+---
+
+**RULES (beat-edit version):**
+- The IDEA is the entire source of truth for every beat's text/shot choice — invent nothing beyond
+  what it says. If the idea is thin on visual specifics, describe generic wide/macro shots that
+  fit the idea's domain rather than inventing props, locations, or events not implied by the idea.
+- Use the FRAMEWORK only for pacing/duration/scene-count shape — never its example topic.
+- On-screen text must carry the idea's actual content in the creator's voice (terse, plain, no
+  hype vocabulary, no clichés) — this is the text-overlay voice, apply the VOICE DNA tone to it
+  even though it's written, not spoken.
+- Keep it a shootable shot list, not prose — no paragraphs, no narration between beats.
+- CTA/closer: at most one honest line of on-screen text (a question or his current state) or
+  nothing. NEVER "DM me", "link in bio", "comment below", "follow for more", or any sell.
+- DO NOT invent facts, biography, stats, anecdotes, named tools, or events not present in the idea.
+
+---
+
+FRAMEWORK (shape only — its example topics/tools are from a different story; never reuse them as content):
+{{FRAMEWORK}}
+
+---
+
+IDEA (this is the entire source material — write from it):
+{{IDEA}}

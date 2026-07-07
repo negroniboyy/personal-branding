@@ -1,26 +1,10 @@
 import { API_BASE as BASE } from "./apiBase"
 
-export async function fetchFrameworks() {
-  const res = await fetch(`${BASE}/content-writer/frameworks`)
-  if (!res.ok) throw new Error(`HTTP ${res.status}`)
-  return res.json()
-}
-
-export async function postRecommendations({ idea_prompt = null, top_n = 20, domain = null } = {}) {
-  const res = await fetch(`${BASE}/content-writer/recommendations`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ idea_prompt, top_n, domain }),
-  })
-  if (!res.ok) throw new Error(`HTTP ${res.status}`)
-  return res.json()
-}
-
-export async function postGenerate({ story_node_id, framework_id, idea_prompt = null, provider = "openrouter", model = "openai/gpt-oss-120b:free" }) {
+export async function postGenerate({ idea_prompt = null, provider = "openrouter", model = null }) {
   const res = await fetch(`${BASE}/content-writer/generate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ story_node_id, framework_id, idea_prompt, provider, model }),
+    body: JSON.stringify({ idea_prompt, provider, model }),
   })
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res.json()

@@ -1,26 +1,10 @@
 import { API_BASE as BASE } from "./apiBase"
 
-export async function fetchReelFrameworks() {
-  const res = await fetch(`${BASE}/reels/frameworks`)
-  if (!res.ok) throw new Error(`HTTP ${res.status}`)
-  return res.json()
-}
-
-export async function postReelRecommendations({ idea_prompt = null, top_n = 20, domain = null } = {}) {
-  const res = await fetch(`${BASE}/reels/recommendations`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ idea_prompt, top_n, domain }),
-  })
-  if (!res.ok) throw new Error(`HTTP ${res.status}`)
-  return res.json()
-}
-
-export async function postReelGenerate({ story_node_id, framework_id, idea_prompt = null, model = null, provider = null }) {
+export async function postReelGenerate({ idea_prompt = null, model = null, provider = null }) {
   const res = await fetch(`${BASE}/reels/generate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ story_node_id, framework_id, idea_prompt, model, provider }),
+    body: JSON.stringify({ idea_prompt, model, provider }),
   })
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res.json()
@@ -34,6 +18,12 @@ export async function fetchReelScripts() {
 
 export async function fetchReelScript(id) {
   const res = await fetch(`${BASE}/reels/scripts/${id}`)
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json()
+}
+
+export async function fetchReelScriptVersions(id) {
+  const res = await fetch(`${BASE}/reels/scripts/${id}/versions`)
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res.json()
 }

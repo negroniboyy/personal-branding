@@ -1,7 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
-  postReelRecommendations,
   postReelGenerate,
   fetchReelScripts,
   fetchReelScript,
@@ -14,97 +13,80 @@ import {
 import GlassPanel from "./ui/GlassPanel.jsx"
 import PrimaryButton from "./ui/PrimaryButton.jsx"
 import Icon from "./ui/Icon.jsx"
-import DomainChips from "./DomainChips.jsx"
-import StoryPreview from "./StoryPreview.jsx"
 import { ModelSelector } from "./ModelSelector.jsx"
-import { DOMAINS } from "../lib/domains.js"
-import { frameworkLabel } from "../lib/frameworkLabel.js"
+import { useJob } from "../lib/useJob.js"
 
-export default function ReelWriter({ initialStory }) {
-  const [stories, setStories] = useState([])
-  const [frameworks, setFrameworks] = useState([])
-  const [selectedStoryId, setSelectedStoryId] = useState(null)
-  const [selectedFrameworkId, setSelectedFrameworkId] = useState(null)
+function ScanJobRow({ file, jobId, onSettled }) {
+  const { job, error } = useJob(jobId, {
+    onDone: () => onSettled(),
+    onError: () => onSettled(),
+  })
+  const status = job?.status || "queued"
+  const icon = status === "done" ? "check_circle" : status === "failed" ? "error" : "sync"
+  const color = status === "done" ? "text-primary" : status === "failed" ? "text-error" : "text-on-surface-variant"
+  return (
+    <li className={`font-mono-script text-mono-script flex items-center gap-2 ${color}`}>
+      <Icon name={icon} size={14} className={status !== "done" && status !== "failed" ? "animate-spin" : ""} />
+      {file}
+      {status === "failed" && `: ${job?.error || error || "failed"}`}
+    </li>
+  )
+}
+
+export default function ReelWriter() {
   const [ideaPrompt, setIdeaPrompt] = useState("")
-  const [manualOverride, setManualOverride] = useState(false)
   const [scripts, setScripts] = useState([])
   const [activeScript, setActiveScript] = useState(null)
-  const [generating, setGenerating] = useState(false)
-  const [loadingRecs, setLoadingRecs] = useState(false)
-  const [scanning, setScanning] = useState(false)
-  const [scanResult, setScanResult] = useState(null)
+  const [jobId, setJobId] = useState(null)
+  const [scanJobs, setScanJobs] = useState(null)
+  const [settledCount, setSettledCount] = useState(0)
   const [editedText, setEditedText] = useState("")
   const [saving, setSaving] = useState(false)
   const [deletingId, setDeletingId] = useState(null)
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState(null)
-  const [domain, setDomain] = useState(null)
-  const [selectedModel, setSelectedModel] = useState("openai/gpt-oss-120b:free")
-  const appliedInitial = useRef(false)
+  const [selectedModel, setSelectedModel] = useState("qwen/qwen3-235b-a22b-thinking-2507")
 
-  const loadRecommendations = useCallback(async (idea, activeDomain) => {
-    setLoadingRecs(true)
-    setError(null)
-    try {
-      const data = await postReelRecommendations({ idea_prompt: idea || null, top_n: 200, domain: activeDomain ?? null })
-      let storyList = data.stories || []
-      const pinInitial = initialStory && !appliedInitial.current
-      if (pinInitial && !storyList.some(s => String(s.id) === String(initialStory.id))) {
-        storyList = [initialStory, ...storyList]
-      }
-      setStories(storyList)
-      setFrameworks(data.frameworks || [])
-      if (pinInitial) {
-        setSelectedStoryId(initialStory.id)
-        appliedInitial.current = true
-      } else if (!manualOverride && storyList.length > 0) {
-        setSelectedStoryId(storyList[0].id)
-      }
-      if (!manualOverride && data.frameworks.length > 0) setSelectedFrameworkId(data.frameworks[0].id)
-      setManualOverride(false)
-    } catch (e) {
-      setError(e.message)
-    } finally {
-      setLoadingRecs(false)
-    }
-  }, [manualOverride, initialStory])
+  const { job } = useJob(jobId, {
+    onDone: (result) => {
+      setActiveScript(result)
+      setEditedText(result.generated_text)
+      setJobId(null)
+      loadScripts()
+    },
+    onError: (msg) => { setError(msg); setJobId(null) },
+  })
+  const generating = !!jobId
+  const scanning = scanJobs != null && settledCount < scanJobs.length
 
   const loadScripts = async () => {
     try { setScripts(await fetchReelScripts()) } catch { /* non-blocking */ }
   }
 
-  useEffect(() => { loadRecommendations("", null); loadScripts() }, [])
+  useEffect(() => { loadScripts() }, [])
 
-  const isFreeform = selectedStoryId === "__none__"
-  const canGenerate = selectedFrameworkId && (isFreeform ? ideaPrompt.trim() : selectedStoryId)
+  const canGenerate = ideaPrompt.trim()
 
   const handleGenerate = async () => {
     if (!canGenerate) return
-    setGenerating(true)
     setError(null)
     setActiveScript(null)
     try {
-      const result = await postReelGenerate({
-        story_node_id: isFreeform ? null : selectedStoryId,
-        framework_id: selectedFrameworkId,
+      const { job_id } = await postReelGenerate({
         idea_prompt: ideaPrompt || null,
         model: selectedModel,
-        provider: selectedModel.startsWith("ollama:") ? "ollama" : "openrouter",
+        provider: "openrouter",
       })
-      setActiveScript(result)
-      setEditedText(result.generated_text)
-      await loadScripts()
+      setJobId(job_id)
     } catch (e) {
       setError(e.message)
-    } finally {
-      setGenerating(false)
     }
   }
 
   const handleSelectScript = async (id) => {
     try {
       const s = await fetchReelScript(id)
-      const script = { script_id: s.id, generated_text: s.generated_text, story_node_id: s.story_node_id, framework_id: s.framework_id, model_used: s.model_used, created_at: s.created_at }
+      const script = { script_id: s.id, generated_text: s.generated_text, story_node_id: s.story_node_id, framework_id: s.framework_id, framework_pick_reason: s.framework_pick_reason, model_used: s.model_used, created_at: s.created_at }
       setActiveScript(script)
       setEditedText(s.generated_text)
     } catch (e) { setError(e.message) }
@@ -156,18 +138,23 @@ export default function ReelWriter({ initialStory }) {
   }
 
   const handleScan = async () => {
-    setScanning(true)
     setError(null)
-    setScanResult(null)
+    setSettledCount(0)
     try {
       const r = await postReelScan()
-      setScanResult(r)
-      if (r.succeeded.length > 0) await loadRecommendations(ideaPrompt)
+      setScanJobs(r.jobs)
+      if (r.jobs.length === 0) setSettledCount(0)
     } catch (e) {
       setError(e.message)
-    } finally {
-      setScanning(false)
     }
+  }
+
+  const handleScanSettled = () => {
+    setSettledCount(c => {
+      const next = c + 1
+      if (scanJobs && next >= scanJobs.length) loadScripts()
+      return next
+    })
   }
 
   const handleCopy = () => {
@@ -177,9 +164,6 @@ export default function ReelWriter({ initialStory }) {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const selectedStory = stories.find(s => String(s.id) === String(selectedStoryId))
-  const selectedFramework = frameworks.find(f => String(f.id) === String(selectedFrameworkId))
-
   return (
     <div className="flex flex-col gap-8 relative">
       {/* Decorative glow blob */}
@@ -187,15 +171,6 @@ export default function ReelWriter({ initialStory }) {
 
       {/* --- Input section --- */}
       <section className="relative z-10 flex flex-col gap-4">
-        <DomainChips
-          domains={DOMAINS}
-          selected={domain}
-          onChange={(d) => {
-            setDomain(d)
-            loadRecommendations(ideaPrompt, d)
-          }}
-        />
-
         <GlassPanel className="rounded-xl p-card_padding">
           <label className="font-label-caps text-label-caps text-on-surface-variant block mb-3">IDEA HINT</label>
           <textarea
@@ -207,59 +182,7 @@ export default function ReelWriter({ initialStory }) {
           />
         </GlassPanel>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="flex flex-col gap-2">
-            <label className="font-label-caps text-label-caps text-on-surface-variant">STORY</label>
-            <select
-              value={selectedStoryId ?? ""}
-              onChange={e => { setSelectedStoryId(e.target.value); setManualOverride(true) }}
-              className="glass-panel rounded-lg px-4 py-3 font-body text-body text-on-surface appearance-none focus:border-primary outline-none border-black/5"
-            >
-              <option value="__none__">— No story (use idea only) —</option>
-              {stories.map(s => (
-                <option key={s.id} value={s.id}>
-                  {(s.conflict_node || s.user_state || s.id).replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase()).slice(0, 55)}
-                </option>
-              ))}
-            </select>
-            {isFreeform && (
-              <p className="font-label-caps text-[10px] text-secondary px-1">Idea hint is required — will be used as source</p>
-            )}
-          </div>
-          <div className="flex flex-col gap-2">
-            <label className="font-label-caps text-label-caps text-on-surface-variant">REEL FRAMEWORK</label>
-            <select
-              value={selectedFrameworkId ?? ""}
-              onChange={e => { setSelectedFrameworkId(e.target.value); setManualOverride(true) }}
-              className="glass-panel rounded-lg px-4 py-3 font-body text-body text-on-surface appearance-none focus:border-primary outline-none border-black/5"
-            >
-              {frameworks.length === 0 && <option value="">No frameworks loaded</option>}
-              {frameworks.map(f => (
-                <option key={f.id} value={f.id}>{frameworkLabel(f, "reel")}</option>
-              ))}
-            </select>
-            {selectedFramework && (
-              <p className="font-label-caps text-[10px] text-on-surface-variant px-1">
-                {selectedFramework.hook_type} · {selectedFramework.pacing} · {selectedFramework.cta_type}
-                {selectedFramework.duration_sec ? ` · ${selectedFramework.duration_sec.toFixed(1)}s` : ""}
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Selected story preview */}
-        {!isFreeform && selectedStory && <StoryPreview story={selectedStory} />}
-
         <div className="flex gap-3 flex-wrap items-center">
-          <motion.button
-            onClick={() => loadRecommendations(ideaPrompt, domain)}
-            disabled={loadingRecs}
-            whileTap={{ scale: 0.98 }}
-            className="flex-1 glass-panel text-primary py-3 px-5 rounded-xl font-label-caps text-label-caps flex items-center justify-center gap-2 hover:bg-white transition-colors border-primary/20 disabled:opacity-40"
-          >
-            <Icon name={loadingRecs ? "sync" : "auto_awesome"} size={16} />
-            {loadingRecs ? "Loading..." : "Get Recommendations"}
-          </motion.button>
           <ModelSelector
             task="generate_reel_script"
             value={selectedModel}
@@ -271,9 +194,12 @@ export default function ReelWriter({ initialStory }) {
             icon={generating ? "hourglass_top" : "movie_edit"}
             className="flex-1"
           >
-            {generating ? "Generating..." : "Generate Reel Script"}
+            {generating ? (job?.status === "running" ? "Generating..." : "Queued...") : "Generate Reel Script"}
           </PrimaryButton>
         </div>
+        <p className="font-label-caps text-[10px] text-on-surface-variant -mt-2 px-1">
+          The framework is picked automatically. You can leave this page — generation keeps running.
+        </p>
 
         {error && (
           <div className="flex items-center gap-2 text-error font-label-caps text-label-caps">
@@ -347,6 +273,12 @@ export default function ReelWriter({ initialStory }) {
                     </motion.div>
                   ) : activeScript ? (
                     <motion.div key="script" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                      {activeScript.framework_id && (
+                        <p className="font-label-caps text-[10px] text-on-surface-variant italic mb-3">
+                          Framework: {activeScript.framework_id}
+                          {activeScript.framework_pick_reason ? ` — ${activeScript.framework_pick_reason}` : ""}
+                        </p>
+                      )}
                       <textarea
                         value={editedText}
                         onChange={e => setEditedText(e.target.value)}
@@ -357,7 +289,7 @@ export default function ReelWriter({ initialStory }) {
                   ) : (
                     <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center py-16 gap-2 text-center">
                       <Icon name="movie_edit" size={32} className="text-outline-variant" />
-                      <span className="font-body text-body text-on-surface-variant">Select a story + framework and click Generate Reel Script</span>
+                      <span className="font-body text-body text-on-surface-variant">Write an idea and click Generate Reel Script</span>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -412,30 +344,32 @@ export default function ReelWriter({ initialStory }) {
           </div>
 
           <p className="font-label-caps text-[10px] text-on-surface-variant leading-relaxed mb-4">
-            Drop .mp4 files into the references folder, then scan to extract frameworks. Successful extractions delete the source file. May take several minutes per file.
+            Drop .mp4 files into the references folder, then scan to extract frameworks. Successful extractions
+            delete the source file. Each file runs as a background job — you can leave this page while it works
+            through the queue.
           </p>
 
           <AnimatePresence>
-            {scanResult && (
+            {scanJobs && scanJobs.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
                 className="p-4 bg-surface-container-low rounded-lg"
               >
-                <div className="flex items-center gap-4 font-label-caps text-label-caps">
-                  <span className="text-on-surface-variant">Processed: <span className="text-on-surface">{scanResult.processed}</span></span>
-                  <span className="text-primary">OK: {scanResult.succeeded.length}</span>
-                  {scanResult.failed.length > 0 && <span className="text-error">Failed: {scanResult.failed.length}</span>}
+                <div className="flex items-center gap-4 font-label-caps text-label-caps mb-2">
+                  <span className="text-on-surface-variant">Queued: <span className="text-on-surface">{scanJobs.length}</span></span>
+                  <span className="text-on-surface-variant">Settled: <span className="text-on-surface">{settledCount}</span></span>
                 </div>
-                {scanResult.failed.length > 0 && (
-                  <ul className="mt-2 space-y-1">
-                    {scanResult.failed.map(f => (
-                      <li key={f.file} className="font-mono-script text-mono-script text-error">{f.file}: {f.status}</li>
-                    ))}
-                  </ul>
-                )}
+                <ul className="space-y-1">
+                  {scanJobs.map(({ file, job_id }) => (
+                    <ScanJobRow key={job_id} file={file} jobId={job_id} onSettled={handleScanSettled} />
+                  ))}
+                </ul>
               </motion.div>
+            )}
+            {scanJobs && scanJobs.length === 0 && (
+              <p className="font-label-caps text-label-caps text-on-surface-variant">No .mp4 files found in the references folder.</p>
             )}
           </AnimatePresence>
         </GlassPanel>

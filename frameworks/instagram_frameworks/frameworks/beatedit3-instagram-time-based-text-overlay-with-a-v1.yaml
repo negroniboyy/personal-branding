@@ -1,0 +1,28 @@
+creator: '@NKIRKNZ'
+source_file: beatedit3.MP4
+hook_type: time-based text overlay with action
+tone: energetic
+color_system: white text for primary information, orange for brand logo/secondary
+  detail
+shot_pattern: wide → macro → detail → detail → detail → wide
+beats:
+- shot: wide
+  text_guess: 7:00 Wake Up
+- shot: wide
+  text_guess: Down the Hatch
+- shot: macro
+  text_guess: 8:20 Warm Up
+- shot: detail
+  text_guess: 8:30 Coffee works it's magic
+- shot: detail
+  text_guess: 8:42 Secure Pants
+- shot: wide
+  text_guess: 5x6min @ 3:20/km
+description: A beat-edit template using time-stamped on-screen text and dynamic shot
+  transitions to showcase a personal morning routine with a high-energy, music-driven
+  rhythm.
+fits_topics:
+- fitness
+- routine
+- motivation
+- lifestyle

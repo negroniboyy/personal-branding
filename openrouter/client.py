@@ -11,7 +11,7 @@ load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", "NOTION DI
 
 from shared.logger import get_logger
 
-logger = get_logger("narrative_warehouse")
+logger = get_logger("openrouter")
 
 
 class OpenRouterClient:

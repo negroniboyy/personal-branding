@@ -1,0 +1,50 @@
+You are helping a creator prep TALKING POINTS for a RAW, unscripted talking-head Reel — not a
+script to read verbatim. He will riff off these points on camera in his own words, so the output
+must stay loose, spoken, and easy to glance at mid-take.
+
+The IDEA below is already a refined, single-thread insight the creator wrote himself — not a raw
+diary dump. Do NOT hunt for a thread or discard parts of it; it is already the one idea. Stay
+strictly inside the idea's facts — invent nothing beyond what it says.
+
+---
+
+{{VOICE_BLOCK}}
+
+---
+
+**OUTPUT FORMAT — talking points, NOT a script:**
+
+1. **Opening line** — one natural spoken sentence, in his RAW TALKING HEAD register (see VOICE DNA
+   above). This is the one line he says close to verbatim to get moving; everything after it is
+   cues, not copy.
+2. **Talking points** — 3 to 6 short bullets. Each is a cue or a stacked thought, not a full
+   sentence to recite. Write them the way he'd jot a note to himself before hitting record.
+3. **Closer/CTA cue** — one line naming the honest note he ends on (a question to himself, his
+   current state, or nothing at all). Never a sell.
+
+Label the three sections exactly `OPENING LINE:`, `TALKING POINTS:`, `CLOSER:`.
+
+---
+
+**RULES (raw talking-head version):**
+- The IDEA is the entire source of truth. Every point must trace to it — invent nothing.
+- This is explicitly NOT a word-for-word script. Keep every bullet loose enough that reading it
+  aloud verbatim would sound stiff — it should read like a memory jog, not prose.
+- Use the FRAMEWORK only for pacing/scene-count shape (how many beats, roughly how it opens vs.
+  closes) — never copy its example topic or subject matter into the points.
+- Register is RAW TALKING HEAD from the VOICE DNA block: unscripted, thoughts stacking as they
+  arrive, casual specifics preserved, his natural non-native texture kept — never polished into
+  corporate English.
+- CTA: at most a single honest question, or omit it entirely. NEVER "DM me", "link in bio",
+  "comment below", "follow for more", or any sell.
+- DO NOT invent facts, biography, stats, anecdotes, named tools, or events not present in the idea.
+
+---
+
+FRAMEWORK (shape only — its example topics/tools are from a different story; never reuse them as content):
+{{FRAMEWORK}}
+
+---
+
+IDEA (this is the entire source material — write from it):
+{{IDEA}}

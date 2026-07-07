@@ -49,14 +49,37 @@ def _row_to_item(row: sqlite3.Row, channel: str) -> dict:
     return d
 
 
+def _get_stats(conn: sqlite3.Connection, table: str, fw_id: str) -> dict:
+    row = conn.execute(
+        f"SELECT COUNT(*) AS used, "
+        f"SUM(CASE WHEN status IN ('approved', 'recorded', 'posted') THEN 1 ELSE 0 END) AS approved, "
+        f"SUM(CASE WHEN status = 'killed' THEN 1 ELSE 0 END) AS killed "
+        f"FROM {table} WHERE framework_id = ?",
+        (fw_id,),
+    ).fetchone()
+    return {
+        "used": row["used"] or 0,
+        "approved": row["approved"] or 0,
+        "killed": row["killed"] or 0,
+    }
+
+
 def _get_linkedin(conn: sqlite3.Connection, fw_id: str) -> Optional[dict]:
     row = conn.execute("SELECT * FROM frameworks WHERE id = ?", (fw_id,)).fetchone()
-    return _row_to_item(row, "linkedin") if row else None
+    if not row:
+        return None
+    item = _row_to_item(row, "linkedin")
+    item.update(_get_stats(conn, "content_drafts", fw_id))
+    return item
 
 
 def _get_reel(conn: sqlite3.Connection, fw_id: str) -> Optional[dict]:
     row = conn.execute("SELECT * FROM reel_frameworks WHERE id = ?", (fw_id,)).fetchone()
-    return _row_to_item(row, "reels") if row else None
+    if not row:
+        return None
+    item = _row_to_item(row, "reels")
+    item.update(_get_stats(conn, "reel_scripts", fw_id))
+    return item
 
 
 def _update_linkedin(conn: sqlite3.Connection, fw_id: str, data: dict) -> None:
@@ -118,17 +141,31 @@ def _update_reel(conn: sqlite3.Connection, fw_id: str, data: dict) -> None:
 # Routes
 # ---------------------------------------------------------------------------
 
+_STATS_SUBQUERY = """
+    SELECT framework_id,
+           COUNT(*) AS used,
+           SUM(CASE WHEN status IN ('approved', 'recorded', 'posted') THEN 1 ELSE 0 END) AS approved,
+           SUM(CASE WHEN status = 'killed' THEN 1 ELSE 0 END) AS killed
+    FROM {table}
+    GROUP BY framework_id
+"""
+
+
 @router.get("")
 def list_frameworks():
     conn = _db()
     try:
         linkedin = [_row_to_item(r, "linkedin") for r in conn.execute(
-            "SELECT id, hook_type, tone, cta_type, description, source_file, yaml_path "
-            "FROM frameworks ORDER BY id"
+            "SELECT f.id, f.hook_type, f.tone, f.cta_type, f.description, f.source_file, f.yaml_path, "
+            "COALESCE(s.used, 0) AS used, COALESCE(s.approved, 0) AS approved, COALESCE(s.killed, 0) AS killed "
+            "FROM frameworks f LEFT JOIN (" + _STATS_SUBQUERY.format(table="content_drafts") + ") s "
+            "ON s.framework_id = f.id ORDER BY f.id"
         ).fetchall()]
         reels = [_row_to_item(r, "reels") for r in conn.execute(
-            "SELECT id, hook_type, tone, cta_type, pacing, description, source_file, yaml_path "
-            "FROM reel_frameworks ORDER BY id"
+            "SELECT f.id, f.hook_type, f.tone, f.cta_type, f.pacing, f.description, f.source_file, f.yaml_path, "
+            "COALESCE(s.used, 0) AS used, COALESCE(s.approved, 0) AS approved, COALESCE(s.killed, 0) AS killed "
+            "FROM reel_frameworks f LEFT JOIN (" + _STATS_SUBQUERY.format(table="reel_scripts") + ") s "
+            "ON s.framework_id = f.id ORDER BY f.id"
         ).fetchall()]
         return {"linkedin": linkedin, "reels": reels}
     finally:

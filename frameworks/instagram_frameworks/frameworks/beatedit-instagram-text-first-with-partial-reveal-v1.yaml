@@ -1,0 +1,27 @@
+creator: '@NKIRKNZ'
+source_file: beatedit.MP4
+hook_type: text-first with partial reveal
+tone: energetic
+color_system: red for emphasis/commands, white for descriptive/neutral text
+shot_pattern: wide → macro → macro → wide → macro → wide
+beats:
+- shot: wide
+  text_guess: you just
+- shot: macro
+  text_guess: Anklimg
+- shot: macro
+  text_guess: Don't lift up & down
+- shot: wide
+  text_guess: scuff the ground
+- shot: macro
+  text_guess: Happy Runnin
+- shot: wide
+  text_guess: (illegible)
+description: A beat-edit template using high-contrast text overlays and dynamic body
+  movement to deliver short, impactful instructional or motivational phrases in a
+  visually rhythmic sequence.
+fits_topics:
+- fitness
+- movement
+- motivation
+- technique

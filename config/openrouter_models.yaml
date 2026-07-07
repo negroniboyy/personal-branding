@@ -1,35 +1,49 @@
 # OpenRouter model routing.
 # Edit tiers here — do not hardcode model IDs in application code.
-# Tier 3 (local) always falls back to Ollama gemma-32k:latest.
+# Cascade is primary -> secondary only (router.py only reads these two keys);
+# `options` is display-only, feeding the ModelSelector dropdown, not the cascade.
+# A failing chain surfaces an error.
+#
+# 2026-07-04: all :free slugs removed from every active cascade (primary/
+# secondary) — they were causing repeated timeouts/rate-limit stalls during
+# manual QA. Paid models are all in the sub-cent-per-1k-token range already;
+# cost is negligible next to reliability here. Re-add a :free tier only as an
+# explicit, opt-in choice, never as a default.
 
 tasks:
   generate_linkedin_post:
-    primary:   openai/gpt-oss-120b:free
-    local:     gemma-32k:latest
+    primary:   google/gemma-4-26b-a4b-it
+    secondary: qwen/qwen3-235b-a22b-2507
     options:
-      - google/gemma-4-26b-a4b-it
-      - qwen/qwen3-235b-a22b-2507
       - qwen/qwen3-235b-a22b-thinking-2507
       - deepseek/deepseek-v4-flash
 
   generate_reel_script:
     # qwen-thinking chosen via bake-off (2026-06-14): selects ONE thread from
     # messy diary logs + holds voice, ~90% of Opus quality at ~1% of the cost.
-    # gpt-oss-120b:free could not select (laundry-listed) and is now a fallback.
     primary:   qwen/qwen3-235b-a22b-thinking-2507
-    local:     gemma-32k:latest
+    secondary: google/gemma-4-26b-a4b-it
     options:
-      - openai/gpt-oss-120b:free
-      - google/gemma-4-26b-a4b-it
       - qwen/qwen3-235b-a22b-2507
       - deepseek/deepseek-v4-flash
 
-  extract_story_node:
-    primary:   google/gemma-4-31b-it:free
-    secondary: deepseek/deepseek-v4-flash:free
-    local:     gemma-32k:latest
-
   extract_reel_framework:
-    primary:   google/gemma-4-31b-it:free
-    secondary: deepseek/deepseek-v4-flash:free
-    local:     gemma-32k:latest
+    # 2026-07-03: deepseek/deepseek-v4-flash:free was retired by OpenRouter (404).
+    # 2026-07-04: secondary switched from the :free gemma slug to its paid
+    # equivalent — same model, no more free-tier rate-limit stalls.
+    primary:   deepseek/deepseek-v4-flash
+    secondary: google/gemma-4-31b-it
+
+  extract_reel_framework_beat_edit:
+    # 2026-07-04 bake-off (BrandStudio/vision_model_bakeoff_2026-07-04_beat_edit_extraction/):
+    # all 3 candidates read on-screen text identically; only qwen3-vl correctly
+    # classified shot type (wide vs macro) — the one thing this template needs
+    # right. gemma-4-31b was also ~6x slower for no quality gain, so it's out.
+    primary:   qwen/qwen3-vl-30b-a3b-instruct
+    secondary: google/gemma-4-26b-a4b-it
+
+  # Picks the best-fit framework for an idea from a compact list (id/hook/tone/
+  # description). Cheap + fast is enough — reuses already-vetted paid models.
+  pick_framework:
+    primary:   google/gemma-4-26b-a4b-it
+    secondary: qwen/qwen3-235b-a22b-2507

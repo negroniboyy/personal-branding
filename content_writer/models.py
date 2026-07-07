@@ -1,18 +1,5 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional
-
-
-@dataclass
-class StoryNode:
-    id: str
-    title: str
-    user_state: str
-    conflict_node: str
-    desired_outcome: str
-    the_bridge: str
-    thematic_tags: list[str]
-    worth_score: float
-    score: float = 0.0  # computed ranking score, not persisted
 
 
 @dataclass
@@ -38,6 +25,7 @@ class ContentDraft:
     id: Optional[int] = None
     idea_prompt: Optional[str] = None
     created_at: Optional[str] = None
+    framework_pick_reason: Optional[str] = None
 
 
 @dataclass
@@ -49,17 +37,16 @@ class RecommendationRequest:
 
 @dataclass
 class RecommendationResult:
-    stories: list[StoryNode]
+    stories: list
     frameworks: list[Framework]
 
 
 @dataclass
 class GenerateRequest:
-    story_node_id: Optional[str]
     framework_id: str
     idea_prompt: Optional[str] = None
-    provider: str = "ollama"
-    model: str = "gemma3:latest"
+    provider: str = "openrouter"
+    model: Optional[str] = None  # None -> use config/openrouter_models.yaml cascade
 
 
 @dataclass
@@ -69,3 +56,4 @@ class GenerateResult:
     story_node_id: Optional[str]
     framework_id: str
     model_used: str
+    framework_pick_reason: Optional[str] = None

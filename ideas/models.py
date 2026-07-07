@@ -9,6 +9,10 @@ class Idea(BaseModel):
     draft_count: int = 0
     created_at: str
     updated_at: str
+    notion_page_id: Optional[str] = None
+    pillar: Optional[str] = None
+    tier: Optional[str] = None
+    channels: list[str] = []
 
 
 class IdeaDraft(BaseModel):
@@ -16,9 +20,12 @@ class IdeaDraft(BaseModel):
     channel: str  # "linkedin" | "reel"
     generated_text: str
     framework_id: Optional[str] = None
+    framework_pick_reason: Optional[str] = None
     story_node_id: Optional[str] = None
     model_used: str
     created_at: str
+    version: int = 1
+    tier: Optional[str] = None
 
 
 class IdeaWithDrafts(BaseModel):
@@ -29,6 +36,10 @@ class IdeaWithDrafts(BaseModel):
 class PatchIdeaRequest(BaseModel):
     title: Optional[str] = None
     body: Optional[str] = None
+
+
+class PatchIdeaTierRequest(BaseModel):
+    tier: str
 
 
 class GenerateDraftRequest(BaseModel):

@@ -1,0 +1,27 @@
+creator: '@nkurknz'
+source_file: beatedit2.MP4
+hook_type: single-word text reveal
+tone: energetic
+color_system: red text for emphasis or surprise; white text for narrative; both used
+  against dark backgrounds for contrast
+shot_pattern: macro → wide → wide → macro → detail → macro
+beats:
+- shot: macro
+  text_guess: apple
+- shot: wide
+  text_guess: I had originally planned
+- shot: wide
+  text_guess: in reality
+- shot: macro
+  text_guess: uh
+- shot: detail
+  text_guess: have fun
+- shot: macro
+  text_guess: (illegible)
+description: A beat-edit template using quick cuts between macro and wide shots, with
+  minimalist white and red text to highlight narrative shifts and emotional beats.
+fits_topics:
+- humor
+- contrast
+- personal growth
+- challenge

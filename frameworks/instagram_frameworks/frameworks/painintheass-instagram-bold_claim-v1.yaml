@@ -1,0 +1,114 @@
+framework_id: AUTO_GENERATE
+creator: unknown
+channel: instagram_reel
+source_file: 1.mp4
+hook:
+  type: bold_claim
+  first_line: If you're a pain in the ass, maybe that's the best thing about you.
+structure:
+- beat: hook
+  start_sec: 0.0
+  end_sec: 3.0
+  description: If you're a pain in the ass, maybe that's the best thing about you.
+- beat: setup
+  start_sec: 3.0
+  end_sec: 5.0
+  description: Rebellion runs in my family's blood.
+- beat: story_open
+  start_sec: 5.0
+  end_sec: 6.72
+  description: Let's go back to 1940's Korea.
+- beat: anecdote_1
+  start_sec: 6.72
+  end_sec: 12.36
+  description: My grandfather once butted a Russian soldier for stealing an apple
+    from the family's fruit cart.
+- beat: anecdote_2
+  start_sec: 12.36
+  end_sec: 18.44
+  description: His daughter, my aunt, was three when he carried her across a river
+    in the dark, fleeing what is now North Korea.
+- beat: context
+  start_sec: 18.44
+  end_sec: 21.08
+  description: Back when crossing that line was about to become a crime.
+- beat: anecdote_3
+  start_sec: 21.08
+  end_sec: 24.92
+  description: She grew up in Felford American Soldier. Her mother forbade it, a foreigner.
+- beat: context_2
+  start_sec: 24.92
+  end_sec: 26.6
+  description: He just didn't do that back then.
+- beat: anecdote_4
+  start_sec: 26.6
+  end_sec: 32.68
+  description: But she married him anyway, and because she made it to America first,
+    she brought the whole family over, including my dad.
+- beat: theme_intro
+  start_sec: 32.68
+  end_sec: 36.08
+  description: There's a streak in my family. The ones who refused to do what they're
+    told.
+- beat: personal_reflection
+  start_sec: 36.08
+  end_sec: 39.48
+  description: I think I'm one of them, and it used to get me in trouble with my parents
+    as a kid.
+- beat: aunt_intro
+  start_sec: 39.48
+  end_sec: 44.92
+  description: I called my aunt, put people more, put me in a Korean accent because
+    she always had a dog.
+- beat: aunt_acceptance
+  start_sec: 44.92
+  end_sec: 48.52
+  description: She never once tried to change me. She just liked me exactly as I was.
+- beat: aunt_comparison
+  start_sec: 48.52
+  end_sec: 52.32
+  description: She used to say I reminded her of herself, a tomboy who couldn't sit
+    still.
+- beat: aunt_connection
+  start_sec: 52.32
+  end_sec: 66.32
+  description: In the last year of her life, we talked every week, and every time
+    she told me, Hello, my name is Apikomu. I'm Apikomu, I'm a pretty, nice, and nice
+    girl. I love you. I'm always here.
+- beat: reflection
+  start_sec: 66.32
+  end_sec: 72.88
+  description: For years, I thought being the odd one was a flaw. The thing that made
+    everything harder, but it was never something to fix.
+- beat: theme_reinforcement
+  start_sec: 72.88
+  end_sec: 78.8
+  description: It was in my blood. My uncle called it a special strain of Choi D.M.A.,
+    the same defiance that got us out of Korea.
+- beat: payoff
+  start_sec: 78.8
+  end_sec: 86.0
+  description: The rebels in my family didn't break things. They broke us free. And
+    Apikomu saw it in me and told me to stay exactly who it was.
+- beat: vulnerability
+  start_sec: 86.0
+  end_sec: 89.48
+  description: Most of the time, I'm still not sure what I'm doing. I'm still figuring
+    things out.
+- beat: cta
+  start_sec: 89.48
+  end_sec: 104.2
+  description: The biggest pain in the ass in my family is the only reason on here.
+    So if that's you, good. Don't you dare grow out of it.
+pacing: medium
+tone: conversational
+cta:
+  type: soft_sell
+  verbal: Don't you dare grow out of it.
+fits_topics:
+- rebellion
+- family-history
+- identity
+- defiance
+- self-acceptance
+performance_notes: ''

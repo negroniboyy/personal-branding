@@ -1,0 +1,29 @@
+You are analyzing frames sampled across a vertical Instagram Reel in the "beat edit" style:
+music-driven, minimal or no spoken narration, cut-on-beat pacing, on-screen text carries the
+content instead of voiceover. The frames attached are in chronological order, one per sampled
+scene cut. You are given EXACTLY as many frames as there are scenes listed below — do not
+describe or invent beats for any scene beyond those frames, even if the video is longer.
+
+{{REEL_CONTEXT}}
+
+Extract a reusable FRAMEWORK describing this video's visual grammar so it can be used as a
+template for future beat-edit reels on a DIFFERENT topic — capture the SHAPE, not this video's
+specific subject matter.
+
+Output ONLY a YAML object with exactly these fields:
+
+creator: string — guess from any visible @handle in the frames, else "unknown"
+source_file: string — leave as "unknown", it will be filled in automatically
+hook_type: a short phrase describing the opening beat's visual/text hook style
+tone: one word (e.g. energetic, motivational, blunt, calm)
+color_system: describe the on-screen text color coding you observe (e.g. red vs white vs green
+  usage, and what each color seems to signal)
+shot_pattern: describe the alternation pattern between shot types across the frames (wide/macro/detail)
+beats: a list of objects — EXACTLY one per attached frame, in the same order, no more, no fewer:
+  - shot: wide | macro | detail (your best guess for that frame)
+  - text_guess: the on-screen text visible in that frame, verbatim if legible, else "(illegible)"
+fits_topics: a list of 2-4 topic keywords this framework's SHAPE would suit (not the specific
+  subject shown in this video)
+description: one sentence summarizing this template's use case
+
+Output plain YAML only — no markdown code fences, no commentary before or after.

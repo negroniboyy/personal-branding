@@ -87,6 +87,7 @@ def run_migration(conn: sqlite3.Connection) -> None:
         "ALTER TABLE content_drafts ADD COLUMN idea_id TEXT REFERENCES ideas(id)",
         "ALTER TABLE frameworks ADD COLUMN description TEXT DEFAULT ''",
         "ALTER TABLE content_drafts ADD COLUMN cost_usd REAL DEFAULT 0.0",
+        "ALTER TABLE content_drafts ADD COLUMN framework_pick_reason TEXT",
     ]:
         try:
             conn.execute(alter)

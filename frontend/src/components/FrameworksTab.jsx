@@ -148,6 +148,9 @@ export default function FrameworksTab() {
             <p className="font-label-caps text-[10px] text-on-surface-variant mt-0.5 truncate">
               {[f.hook_type, f.tone].filter(Boolean).map(s => s.replace(/_/g, " ")).join(" · ")}
             </p>
+            <p className="font-label-caps text-[10px] text-outline-variant mt-0.5">
+              {f.used ?? 0} used · {f.approved ?? 0} approved · {f.killed ?? 0} killed
+            </p>
           </button>
         )
       })}
@@ -243,6 +246,13 @@ export default function FrameworksTab() {
                         </span>
                       )}
                       <span className="font-label-caps text-[10px] text-outline-variant">{detail.id}</span>
+                    </div>
+
+                    {/* Outcome stats */}
+                    <div className="flex items-center gap-3 font-label-caps text-[10px] text-on-surface-variant">
+                      <span>{detail.used ?? 0} used</span>
+                      <span className="text-primary">{detail.approved ?? 0} approved</span>
+                      <span className="text-error">{detail.killed ?? 0} killed</span>
                     </div>
 
                     {/* Editable title (source_file) */}

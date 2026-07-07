@@ -1,0 +1,19 @@
+creator: '@GAVIN.BRITTON'
+source_file: beatedit1.MP4
+hook_type: static wide shot with surreal overlay
+tone: energetic
+color_system: white text for branding, vibrant purple and green for game-style items,
+  dark background for contrast
+shot_pattern: wide → wide
+beats:
+- shot: wide
+  text_guess: '@GAVIN.BRITTON'
+- shot: wide
+  text_guess: '@GAVIN.BRITTON'
+description: A beat-edit template using a wide static shot with digital overlays,
+  transitioning from daylight to night, ideal for surreal or game-inspired content.
+fits_topics:
+- gaming
+- surreal humor
+- adventure
+- parody

@@ -1,0 +1,67 @@
+framework_id: AUTO_GENERATE
+creator: unknown
+channel: instagram_reel
+source_file: 1.mp4
+hook:
+  type: bold_claim
+  first_line: I stole one story telling speaker from secular creators in 200x my audience
+    and only like 30 postments and it's a little something
+structure:
+- beat: hook
+  start_sec: 0.0
+  end_sec: 7.64
+  description: Claims to have stolen a storytelling technique from secular creators
+    to grow audience 200x with only 30 posts
+- beat: conflict
+  start_sec: 8.14
+  end_sec: 14.34
+  description: States that people don't care about your story and never will
+- beat: solution_hint
+  start_sec: 14.8
+  end_sec: 21.12
+  description: There is one exception, one word we put in videos that keeps every
+    soul up
+- beat: misdirect
+  start_sec: 21.44
+  end_sec: 25.96
+  description: Jokes about crushing weight of sins and eternal separation from God,
+    says even worse
+- beat: misdirect2
+  start_sec: 26.84
+  end_sec: 28.84
+  description: Says 'I'm certainty, but guess what?'
+- beat: main_insight
+  start_sec: 28.84
+  end_sec: 36.52
+  description: 'Reveals the main skill: the curiosity gap, and asks ''see what I did
+    there?'''
+- beat: explanation
+  start_sec: 37.2
+  end_sec: 43.0
+  description: Explains that in every line we give enough context to know where video
+    is going but not enough to spoil payoff
+- beat: application
+  start_sec: 43.0
+  end_sec: 49.24
+  description: Continues explanation and offers to show how he used it in this video
+- beat: cta
+  start_sec: 49.4
+  end_sec: 53.24
+  description: Asks viewers to comment 'leap fall' for breakdown, says 'See ya and
+    God bless'
+- beat: outro
+  start_sec: 55.96
+  end_sec: 58.0
+  description: Says 'To be pic' (likely an outro phrase)
+pacing: fast
+tone: conversational
+cta:
+  type: soft_sell
+  verbal: Comment a leap fall for the breakdown. See ya and God bless
+fits_topics:
+- storytelling
+- curiosity gap
+- audience growth
+- engagement
+- social media
+performance_notes: ''

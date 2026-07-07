@@ -37,8 +37,18 @@ export const generateReelScript = (id, payload = {}) =>
     body: JSON.stringify(payload),
   })
 
+export const setIdeaTier = (id, tier) =>
+  _fetch(`/ideas/${id}/tier`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tier }),
+  })
+
 export const deleteIdea = (id) =>
   _fetch(`/ideas/${id}`, { method: "DELETE" })
 
 export const deleteIdeaDraft = (ideaId, draftId, channel) =>
   _fetch(`/ideas/${ideaId}/drafts/${draftId}?channel=${channel}`, { method: "DELETE" })
+
+export const syncNotionIdeas = () =>
+  _fetch("/notion/sync", { method: "POST" })

@@ -1,12 +1,14 @@
 # CLAUDE.md - Root Guardrails
 
 ## 🚀 0. SESSION BOOTSTRAP (do this FIRST, every session)
-Before any other work, read these memory files if they exist (skip silently if absent):
-1. `md/checkpoint.md` — live session state (status, file map, next steps).
-2. `md/code_index.md` — live code index (file → role / key symbols).
+Before any other work, read the workspace's SINGLE SOURCE OF TRUTH at the **BrandStudio root**
+(one level up from this repo), if it exists (skip silently if absent):
+1. `../md/checkpoint.md` — live session state (status, file map, next steps).
+2. `../md/code_index.md` — live code index (file → role / key symbols).
 
-These are **live documents**: update them in place via `/session-checkpoint`, never append.
-Notify the user briefly when you've loaded them.
+`personal_brand/md/` is **retired** (pointer stubs only) — do not read or write it.
+`/session-checkpoint` writes to the root `../md/` only, never here. These are **live documents**:
+update them in place, never append. Notify the user briefly when you've loaded them.
 
 Every time you're switching models, you have to notify the user.
 Every time you're following any protocol from this CLAUDE.md, notify the user in a straightforward manner.

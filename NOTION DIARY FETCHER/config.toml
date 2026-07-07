@@ -1,30 +1,5 @@
-[database]
-path = "data/notion_diary.db"
-
-[sync]
-rate_limit_delay = 0.34
-chunk_size_tokens = 500
-chunk_overlap_chars = 50
-
-[notion]
-page_size = 100
-
-[narrative_warehouse]
-provider = "ollama"
-llm_provider = "ollama"
-llm_model = "gemma-32k:latest"
-
-[ollama]
-base_url = "http://localhost:11434"
-default_model = "gemma-32k:latest"
-
 [content_writer]
 provider = "openrouter"
-ollama_model = "gemma-32k:latest"
-ollama_host = "http://localhost:11434"
-max_source_chars = 12000
-default_story_limit = 200
-min_worth_score = 0.80
 recognized_domains = ["building", "career", "ai", "fitness", "philosophy"]
 
 [reel_extractor]
@@ -32,25 +7,17 @@ provider = "openrouter"
 whisper_model        = "base"
 scenedetect_mode     = "adaptive"
 content_threshold    = 20.0
-ollama_model         = "gemma-32k:latest"
-ollama_endpoint      = "http://localhost:11434"
 min_transcript_chars = 20
 
+# Beat-edit reference extraction (references/beat_edit/ subfolder). Model routing
+# lives in config/openrouter_models.yaml (task: extract_reel_framework_beat_edit)
+# like every other task — not special-cased here.
 [reel_extractor.vision]
-enabled            = false
-provider           = "anthropic"
-model              = "claude-sonnet-4-6"
-api_key_env        = "ANTHROPIC_API_KEY"
 frame_sample_count = 6
 frame_strategy     = "scene_midpoints"
 
 [script_writer]
 provider = "openrouter"
-ollama_model             = "gemma-32k:latest"
-ollama_endpoint          = "http://localhost:11434"
-top_n_stories            = 5
-top_n_frameworks         = 3
-short_reel_threshold_sec = 15
 
 [logger]
 log_dir        = "logs"   # relative to repo root (personal_brand/)

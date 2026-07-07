@@ -1,5 +1,4 @@
 import sqlite3
-import sys
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -7,15 +6,7 @@ from typing import Literal
 
 from fastapi import APIRouter, HTTPException
 
-_REPO_ROOT = Path(__file__).resolve().parent.parent
-_INSTAGRAM_FW_DIR = _REPO_ROOT / "frameworks" / "instagram_frameworks"
-if str(_INSTAGRAM_FW_DIR) not in sys.path:
-    sys.path.insert(0, str(_INSTAGRAM_FW_DIR))
-
-from content_writer.service import generate_draft as _cw_generate, get_recommendations as _cw_recs
-from content_writer.models import GenerateRequest, RecommendationRequest
-import script_writer
-import llm_client
+from jobs import queue as jobs_queue
 
 from . import repository
 from .models import (
@@ -23,10 +14,11 @@ from .models import (
     Idea,
     IdeaWithDrafts,
     PatchIdeaRequest,
+    PatchIdeaTierRequest,
 )
 
+_REPO_ROOT = Path(__file__).resolve().parent.parent
 DB_PATH = _REPO_ROOT / "NOTION DIARY FETCHER" / "data" / "notion_diary.db"
-SCRIPT_PROMPT_PATH = script_writer.PROMPT_PATH
 
 router = APIRouter(tags=["ideas"])
 
@@ -124,32 +116,15 @@ def generate_linkedin(idea_id: str, body: GenerateDraftRequest):
         idea_prompt = body.idea_prompt or idea.body or idea.title or None
         if not idea_prompt:
             raise HTTPException(status_code=422, detail="Idea has no text — add a title or body before generating")
-
-        framework_id = body.framework_id
-        if not framework_id:
-            recs = _cw_recs(conn, RecommendationRequest(idea_prompt=idea_prompt, top_n=1))
-            if not recs.frameworks:
-                raise HTTPException(status_code=422, detail="No LinkedIn frameworks available")
-            framework_id = recs.frameworks[0].id
-
-        gen_req = GenerateRequest(
-            story_node_id=None,
-            framework_id=framework_id,
-            idea_prompt=idea_prompt,
-        )
-        result = _cw_generate(conn, gen_req)
-        repository.link_draft(conn, result.draft_id, idea_id)
-
-        return {
-            "id": result.draft_id,
-            "channel": "linkedin",
-            "generated_text": result.generated_text,
-            "framework_id": str(result.framework_id),
-            "story_node_id": None,
-            "model_used": result.model_used,
-        }
     finally:
         conn.close()
+
+    job_id = jobs_queue.enqueue("generate_linkedin_draft", {
+        "idea_id": idea_id,
+        "idea_prompt": idea_prompt,
+        "framework_id": body.framework_id,
+    })
+    return {"job_id": job_id}
 
 
 @router.post("/ideas/{idea_id}/drafts/reel")
@@ -163,38 +138,26 @@ def generate_reel(idea_id: str, body: GenerateDraftRequest):
         idea_prompt = body.idea_prompt or idea.body or idea.title or None
         if not idea_prompt:
             raise HTTPException(status_code=422, detail="Idea has no text — add a title or body before generating")
+    finally:
+        conn.close()
 
-        framework_id = body.framework_id
-        all_fw = script_writer.load_reel_frameworks(conn)
-        if not all_fw:
-            raise HTTPException(status_code=422, detail="No reel frameworks available")
+    job_id = jobs_queue.enqueue("generate_reel_script", {
+        "idea_id": idea_id,
+        "idea_prompt": idea_prompt,
+        "framework_id": body.framework_id,
+        "tier": idea.tier or "scripted-headshot",
+    })
+    return {"job_id": job_id}
 
-        if not framework_id:
-            scored = script_writer.score_frameworks({}, all_fw, idea_prompt)
-            framework_id = scored[0]["id"] if scored else all_fw[0]["id"]
 
-        fw_row = conn.execute("SELECT * FROM reel_frameworks WHERE id = ?", (framework_id,)).fetchone()
-        if not fw_row:
-            raise HTTPException(status_code=404, detail=f"reel_framework {framework_id!r} not found")
-
-        prompt = script_writer.build_freeform_script_prompt(idea_prompt, dict(fw_row))
-        cfg = llm_client.load_config("script_writer")
-        text, model_used = script_writer.generate_script(prompt, cfg)
-
-        script_writer.init_db(conn)
-        duration_target = float(fw_row["duration_sec"] or 0.0)
-        script_id = script_writer.save_script(
-            conn, None, framework_id, idea_prompt, text, model_used, duration_target,
-        )
-        repository.link_reel(conn, script_id, idea_id)
-
-        return {
-            "id": script_id,
-            "channel": "reel",
-            "generated_text": text,
-            "framework_id": framework_id,
-            "story_node_id": None,
-            "model_used": model_used,
-        }
+@router.patch("/ideas/{idea_id}/tier", response_model=Idea)
+def patch_idea_tier(idea_id: str, body: PatchIdeaTierRequest):
+    conn = _db()
+    try:
+        idea = repository.get_idea(conn, idea_id)
+        if not idea:
+            raise HTTPException(status_code=404, detail=f"idea {idea_id!r} not found")
+        repository.set_idea_tier(conn, idea_id, body.tier, _now())
+        return repository.get_idea(conn, idea_id)
     finally:
         conn.close()

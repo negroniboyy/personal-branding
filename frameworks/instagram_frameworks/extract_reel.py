@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Extract Instagram Reel frameworks from .mp4 reference files.
-Pipeline: ffprobe → Whisper (timestamped segments) → PySceneDetect → Ollama LLM → YAML + reel_frameworks table.
+Pipeline: ffprobe → Whisper (timestamped segments) → PySceneDetect → OpenRouter LLM → YAML + reel_frameworks table.
 """
 
 import argparse
@@ -27,7 +27,9 @@ REFERENCES_DIR  = SCRIPT_DIR / "references"
 PROMPTS_DIR     = SCRIPT_DIR / "prompts"
 FRAMEWORKS_DIR  = SCRIPT_DIR / "frameworks"
 FAILED_DIR      = FRAMEWORKS_DIR / "failed"
-PROMPT_PATH     = PROMPTS_DIR / "extract_reel.txt"
+PROMPT_PATH      = PROMPTS_DIR / "extract_reel.txt"
+BEAT_PROMPT_PATH = PROMPTS_DIR / "extract_reel_beat.txt"
+BEAT_EDIT_REFERENCES_DIR = REFERENCES_DIR / "beat_edit"
 
 DB_PATH = Path(__file__).parent.parent.parent / "NOTION DIARY FETCHER" / "data" / "notion_diary.db"
 if not DB_PATH.exists():
@@ -40,6 +42,11 @@ PACING_TYPES = {"fast", "medium", "slow"}
 REQUIRED_FIELDS = [
     "creator", "source_file", "hook", "structure",
     "pacing", "tone", "cta", "fits_topics",
+]
+
+REQUIRED_FIELDS_BEAT_EDIT = [
+    "creator", "source_file", "hook_type", "tone",
+    "color_system", "shot_pattern", "beats", "fits_topics", "description",
 ]
 
 
@@ -78,6 +85,13 @@ def init_db(conn: sqlite3.Connection) -> None:
         CREATE INDEX IF NOT EXISTS idx_rfw_creator   ON reel_frameworks(creator);
         CREATE INDEX IF NOT EXISTS idx_rfw_duration  ON reel_frameworks(duration_sec);
     """)
+    for alter in [
+        "ALTER TABLE reel_frameworks ADD COLUMN video_format TEXT DEFAULT 'talking_head'",
+    ]:
+        try:
+            conn.execute(alter)
+        except Exception:
+            pass
     conn.commit()
 
 
@@ -197,6 +211,10 @@ def parse_yaml_with_fallback(raw: str) -> dict | None:
 
     text = _PRE_EXTRACT_PATTERN.sub(_capture, text)
 
+    # '@' and '`' are reserved YAML indicator characters — an unquoted "@handle"
+    # value (common for social handles like a creator field) breaks the parser.
+    text = re.sub(r'^(\s*(?:-\s+)?[A-Za-z_][A-Za-z0-9_]*:\s+)([@`]\S.*)$', r'\1"\2"', text, flags=re.MULTILINE)
+
     try:
         data = yaml.safe_load(text)
     except yaml.YAMLError:
@@ -303,13 +321,31 @@ def validate(data: dict) -> list[str]:
     return missing
 
 
+def validate_beat_edit(data: dict) -> list[str]:
+    missing = []
+    for field in REQUIRED_FIELDS_BEAT_EDIT:
+        if field not in data or data[field] is None or data[field] == "":
+            missing.append(field)
+    beats = data.get("beats")
+    if not isinstance(beats, list) or len(beats) < 1:
+        missing.append("beats (must be non-empty list)")
+    fits = data.get("fits_topics")
+    if not isinstance(fits, list) or len(fits) < 1:
+        missing.append("fits_topics (must be non-empty list)")
+    return missing
+
+
 # ---------------------------------------------------------------------------
 # ID / persistence
 # ---------------------------------------------------------------------------
 
 def generate_framework_id(source_file: str, hook_type: str) -> str:
     stem = Path(source_file).stem.lower().replace(" ", "-")
-    return f"{stem}-instagram-{hook_type}-v1"
+    # preserve underscores so existing hook_type values (e.g. "bold_claim") keep
+    # generating identical IDs; only punctuation/spaces from free-text beat-edit
+    # hook_type phrases get collapsed to hyphens.
+    hook_slug = re.sub(r"[^a-z0-9_]+", "-", hook_type.lower()).strip("-")[:30]
+    return f"{stem}-instagram-{hook_slug}-v1"
 
 
 def save_yaml(framework_id: str, data: dict) -> Path:
@@ -386,6 +422,78 @@ def insert_db_row(
         return False
 
 
+def insert_db_row_beat_edit(
+    conn: sqlite3.Connection,
+    framework_id: str,
+    data: dict,
+    scene_intervals: list[tuple[float, float]],
+    duration: float,
+    yaml_path: Path,
+) -> bool:
+    """Beat-edit rows have no verbal hook/CTA and no Whisper transcript — the on-screen
+    text sequence (`beats[].text_guess`) stands in for both, so keyword search over
+    `transcript_text` still works uniformly across both video_formats."""
+    def _s(v) -> str:
+        if v is None:
+            return ""
+        if isinstance(v, (list, dict)):
+            return json.dumps(v)
+        return str(v)
+
+    beats = data.get("beats", []) or []
+    on_screen_text = " / ".join(
+        b.get("text_guess", "") for b in beats if isinstance(b, dict) and b.get("text_guess")
+    )
+    visual_notes = (
+        f"color_system: {data.get('color_system', '')} | shot_pattern: {data.get('shot_pattern', '')}"
+    )
+    now = datetime.now(timezone.utc).isoformat()
+
+    try:
+        conn.execute("""
+            INSERT OR REPLACE INTO reel_frameworks (
+                id, creator, channel, source_file,
+                duration_sec, scene_count, scene_intervals,
+                hook_type, hook_verbal, hook_silence_sec,
+                structure_json, pacing, tone,
+                cta_type, cta_verbal, fits_topics,
+                transcript_json, transcript_text,
+                visual_notes, performance_notes,
+                description, yaml_path, created_at, video_format
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        """, (
+            framework_id,
+            _s(data.get("creator", "unknown")),
+            "instagram_reel",
+            _s(data.get("source_file", "")),
+            duration,
+            len(scene_intervals),
+            json.dumps([[s, e] for s, e in scene_intervals]),
+            _s(data.get("hook_type", "")),
+            "",
+            None,
+            json.dumps(beats),
+            "fast",
+            _s(data.get("tone", "")),
+            "",
+            "",
+            json.dumps(data.get("fits_topics", [])),
+            "[]",
+            on_screen_text,
+            visual_notes,
+            "",
+            _s(data.get("description", "")),
+            str(yaml_path),
+            now,
+            "beat_edit",
+        ))
+        conn.commit()
+        return True
+    except Exception as e:
+        logger.warning("DB insert failed for %s: %s", framework_id, e)
+        return False
+
+
 # ---------------------------------------------------------------------------
 # Per-file processing
 # ---------------------------------------------------------------------------
@@ -428,7 +536,7 @@ def process_file(
     ctx = build_context_block(duration, scene_intervals, segments, hook_silence)
 
     prompt = llm_client.inject(prompt_template, REEL_CONTEXT=ctx)
-    raw = llm_client.complete(prompt, section="reel_extractor")
+    raw, _model_used = llm_client.complete(prompt, section="reel_extractor")
 
     data = parse_yaml_with_fallback(raw)
     if data is None:
@@ -455,25 +563,109 @@ def process_file(
 
 
 # ---------------------------------------------------------------------------
-# v2 vision hooks (inert in v1.1)
+# Beat-edit extraction (references/beat_edit/ — vision path, no transcript)
 # ---------------------------------------------------------------------------
 
-def sample_frames(
+def choose_scene_subset(
+    scene_intervals: list[tuple[float, float]], count: int
+) -> list[tuple[float, float]]:
+    """Evenly picks up to `count` scenes from the full list. Shared by frame sampling
+    and context-block building so the prompt only ever describes scenes the model
+    actually gets an image for — otherwise it infers/hallucinates extra beats from a
+    scene list it can't see."""
+    if len(scene_intervals) <= count:
+        return list(scene_intervals)
+    step = len(scene_intervals) / count
+    return [scene_intervals[int(i * step)] for i in range(count)]
+
+
+def sample_scene_midpoint_frames(
     filepath: Path,
-    scene_intervals: list[tuple[float, float]],
-    count: int,
-    strategy: str,
+    chosen_scenes: list[tuple[float, float]],
+    tmpdir: Path,
 ) -> list[Path]:
-    raise NotImplementedError("sample_frames is a v2 feature — enable vision in config.toml first")
+    """One frame at the midpoint of each given scene — the actual cut points
+    PySceneDetect found, i.e. the beats of the edit."""
+    if not chosen_scenes:
+        return []
+
+    tmpdir.mkdir(parents=True, exist_ok=True)
+    frame_paths = []
+    for i, (start, end) in enumerate(chosen_scenes):
+        midpoint = (start + end) / 2
+        out_path = tmpdir / f"frame_{i:02d}.jpg"
+        subprocess.run(
+            ["ffmpeg", "-v", "error", "-ss", f"{midpoint:.3f}", "-i", str(filepath),
+             "-vframes", "1", "-vf", "scale=360:-1", "-q:v", "3", "-y", str(out_path)],
+            check=True,
+        )
+        frame_paths.append(out_path)
+    return frame_paths
 
 
-def populate_visual_notes_v2(
-    framework_id: str,
-    frame_paths: list[Path],
+def build_beat_edit_context_block(duration: float, chosen_scenes: list[tuple[float, float]]) -> str:
+    scenes_fmt = ", ".join(f"({s:.2f}, {e:.2f})" for s, e in chosen_scenes)
+    return (
+        f"DURATION: {duration:.2f}s\n"
+        f"SAMPLED SCENES (one frame per scene below, in order — the ONLY frames you can see): "
+        f"[{scenes_fmt}]\n"
+        f"(no speech — visual/music-driven)"
+    )
+
+
+def process_beat_edit_file(
+    filepath: Path,
     cfg: dict,
+    vision_cfg: dict,
+    prompt_template: str,
     conn: sqlite3.Connection,
-) -> None:
-    raise NotImplementedError("populate_visual_notes_v2 is a v2 feature — enable vision in config.toml first")
+) -> tuple[str, str]:
+    stem = filepath.stem
+
+    if not filepath.exists():
+        return filepath.name, f"FAILED: file not found at {filepath.resolve()}"
+
+    try:
+        duration = get_duration(filepath)
+    except RuntimeError as e:
+        _write_failed(stem, f"filepath: {filepath.resolve()}", str(e))
+        return filepath.name, f"FAILED: {e}"
+
+    scene_intervals = get_scene_intervals(
+        filepath, cfg["scenedetect_mode"], cfg["content_threshold"], duration
+    )
+    chosen_scenes = choose_scene_subset(scene_intervals, vision_cfg["frame_sample_count"])
+    ctx = build_beat_edit_context_block(duration, chosen_scenes)
+
+    with tempfile.TemporaryDirectory() as tmp:
+        frame_paths = sample_scene_midpoint_frames(filepath, chosen_scenes, Path(tmp))
+        if not frame_paths:
+            _write_failed(stem, ctx, "(no scenes detected — could not sample frames)")
+            return filepath.name, "FAILED: no scenes detected"
+
+        prompt = llm_client.inject(prompt_template, REEL_CONTEXT=ctx)
+        raw, _model_used = llm_client.complete_vision(prompt, frame_paths, section="reel_extractor_beat_edit")
+
+    data = parse_yaml_with_fallback(raw)
+    if data is None:
+        _write_failed(stem, ctx, raw)
+        return filepath.name, "FAILED: unparseable YAML"
+
+    normalize_fits_topics(data)
+    normalize_source_file(data, filepath.name)
+
+    missing = validate_beat_edit(data)
+    if missing:
+        _write_failed(stem, ctx, raw)
+        return filepath.name, f"FAILED: missing fields: {', '.join(missing)}"
+
+    hook_type    = data.get("hook_type", "unknown")
+    framework_id = generate_framework_id(filepath.name, hook_type)
+    yaml_path    = save_yaml(framework_id, data)
+    db_ok        = insert_db_row_beat_edit(conn, framework_id, data, scene_intervals, duration, yaml_path)
+
+    status = "OK" if db_ok else "OK (DB insert warning)"
+    return framework_id, status
 
 
 # ---------------------------------------------------------------------------
@@ -553,7 +745,7 @@ if __name__ == "__main__":
     parser.add_argument("--file", type=Path, default=None,
                         help="Process a single .mp4 instead of all in references/")
     parser.add_argument("--dry-run", action="store_true",
-                        help="Print assembled prompt; no Ollama, no DB writes")
+                        help="Print assembled prompt; no LLM call, no DB writes")
     parser.add_argument("--with-vision", action="store_true",
                         help="(v1.1: disabled) Vision pass via cloud LLM")
     args = parser.parse_args()

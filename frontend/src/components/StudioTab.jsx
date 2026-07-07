@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { motion } from "framer-motion"
-import { fetchReelScripts, patchReelScript, patchReelScriptMeta, postReelPackage } from "../reelApi"
+import { fetchReelScripts, patchReelScript, patchReelScriptMeta, postReelPackage, fetchReelScriptVersions } from "../reelApi"
 import { fetchDrafts, patchDraft, patchDraftMeta, postDraftPackage } from "../contentWriterApi"
 import GlassPanel from "./ui/GlassPanel.jsx"
 import Icon from "./ui/Icon.jsx"
@@ -146,6 +146,8 @@ function PipelineCard({ item, onChanged }) {
   const [text, setText] = useState(item.generated_text || "")
   const [rejecting, setRejecting] = useState(false)
   const [reason, setReason] = useState("")
+  const [history, setHistory] = useState(null)
+  const [loadingHistory, setLoadingHistory] = useState(false)
 
   const isReel = item.channel === "reel"
   const status = item.status || "queued"
@@ -172,9 +174,10 @@ function PipelineCard({ item, onChanged }) {
   })
 
   const confirmReject = () => {
-    if (!reason.trim()) { setErr("Add a reason — it trains the next batch."); return }
     run(async () => {
-      const updated = await patchMeta(item.id, { status: "killed", verdict: -1, verdict_note: reason.trim() })
+      const fields = { status: "killed", verdict: -1 }
+      if (reason.trim()) fields.verdict_note = reason.trim()
+      const updated = await patchMeta(item.id, fields)
       onChanged(updated, item.channel)
       setRejecting(false)
     })
@@ -183,6 +186,17 @@ function PipelineCard({ item, onChanged }) {
   const makePackage = () => run(async () => {
     const res = await pkg(item.id)
     onChanged({ id: item.id, caption: res.caption, cta: res.cta }, item.channel)
+  })
+
+  const toggleHistory = () => run(async () => {
+    if (history) { setHistory(null); return }
+    setLoadingHistory(true)
+    try {
+      const versions = await fetchReelScriptVersions(item.id)
+      setHistory(versions.filter(v => v.id !== item.id))
+    } finally {
+      setLoadingHistory(false)
+    }
   })
 
   function copyPost() {
@@ -202,6 +216,16 @@ function PipelineCard({ item, onChanged }) {
           }`}>
             {isReel ? "REEL" : "LINKEDIN"} #{item.id}
           </span>
+          {isReel && item.version > 1 && (
+            <span className="font-label-caps text-[10px] px-2 py-1 rounded border shrink-0 text-on-surface-variant bg-black/5 border-black/10">
+              v{item.version}
+            </span>
+          )}
+          {isReel && item.tier && (
+            <span className="font-label-caps text-[10px] px-2 py-1 rounded border shrink-0 text-secondary bg-secondary/5 border-secondary/20">
+              {item.tier}
+            </span>
+          )}
           <button onClick={() => setExpanded(e => !e)} className="flex-1 min-w-0 text-left">
             <p className="font-body text-body text-on-surface line-clamp-1">
               {(item.generated_text || "").slice(0, 120) || "—"}
@@ -270,6 +294,39 @@ function PipelineCard({ item, onChanged }) {
               </div>
             )}
 
+            {/* Version history — prior takes for this idea, read-only */}
+            {isReel && (
+              <div className="mb-4">
+                <Action disabled={loadingHistory} icon={history ? "expand_less" : "history"}
+                  label={loadingHistory ? "Loading…" : (history ? "Hide history" : "History")}
+                  onClick={toggleHistory} />
+                {history && (
+                  history.length === 0 ? (
+                    <p className="mt-2 font-label-caps text-[10px] text-on-surface-variant italic">
+                      No prior versions — this is the only take.
+                    </p>
+                  ) : (
+                    <div className="mt-2 flex flex-col gap-2">
+                      {history.map(v => (
+                        <div key={v.id} className="rounded-lg border border-black/5 bg-black/[0.02] p-3">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-label-caps text-[10px] text-on-surface-variant">v{v.version}</span>
+                            <StatusBadge status={v.status || "queued"} />
+                            <span className="font-label-caps text-[10px] text-on-surface-variant">
+                              {(v.created_at || "").slice(0, 16)}
+                            </span>
+                          </div>
+                          <p className="font-body text-sm text-on-surface whitespace-pre-wrap line-clamp-3">
+                            {v.generated_text}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )
+                )}
+              </div>
+            )}
+
             {/* Reject reason field (two-step) */}
             {rejecting && (
               <div className="mb-3 flex gap-2">
@@ -279,7 +336,7 @@ function PipelineCard({ item, onChanged }) {
                   value={reason}
                   onChange={e => setReason(e.target.value)}
                   onKeyDown={e => e.key === "Enter" && confirmReject()}
-                  placeholder="Why reject? (feeds the next batch as 'avoid this')"
+                  placeholder="Why reject? (optional — feeds the next batch as 'avoid this')"
                   className="flex-1 glass-panel rounded-lg px-3 py-2 font-body text-sm text-on-surface focus:ring-1 focus:ring-error outline-none border-black/5"
                 />
                 <Action disabled={busy} icon="check" label="Confirm" onClick={confirmReject} />
