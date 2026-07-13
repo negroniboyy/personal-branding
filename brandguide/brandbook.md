@@ -33,6 +33,19 @@ Pillars are not silos — the cross-bleed IS the brand (software built for runni
 
 The mix is deliberate: it keeps a shippable cadence across effort levels and kills the perfectionism stall.
 
+## Time caps (non-negotiable)
+
+The system exists to lower the cost of creating. **If you go over time, you ship what you have.** You are not trying to produce your best work — you are building the habit of producing. When in doubt, cut lines that fail the decision filter rather than rewriting them; cutting is faster and produces better results.
+
+| Step | Max time |
+|------|----------|
+| Draft generation | 5 min |
+| Human review + edit | 20 min |
+| Visual (image / card) | 5 min |
+| **Total per post** | **~30 min** |
+
+_(Preserved from the retired `content_workflow.md`; the only still-valid rule from the old story-first loop.)_
+
 ## Platform roles
 
 - **Instagram** — what life looks and feels like: movement, training, environment, quiet reflection, subtle progress. Lived moments over designed narratives.

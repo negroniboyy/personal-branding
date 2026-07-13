@@ -24,9 +24,13 @@ dist/
 
 # Logs
 *.log
+logs/
+
+# Big video files — never let references (incl. beat_edit/ and any subfolder) into git
+frameworks/instagram_frameworks/references/**/*.mp4
+frameworks/instagram_frameworks/references/**/*.MP4
 frameworks/instagram_frameworks/references/*.mp4
 frameworks/instagram_frameworks/references/*.MP4
-logs/
 
 # Generated content mirrors
 scripts/
