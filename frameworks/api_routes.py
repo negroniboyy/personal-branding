@@ -38,6 +38,19 @@ class PutFrameworkBody(BaseModel):
     yaml_text: str
 
 
+# Columns accepted by /reel/ingest — mirror of extract_reel.py row dicts.
+_REEL_INGEST_COLUMNS = {
+    "id", "creator", "channel", "source_file",
+    "duration_sec", "scene_count", "scene_intervals",
+    "hook_type", "hook_verbal", "hook_silence_sec",
+    "structure_json", "pacing", "tone",
+    "cta_type", "cta_verbal", "fits_topics",
+    "transcript_json", "transcript_text",
+    "visual_notes", "performance_notes",
+    "description", "yaml_path", "created_at", "video_format",
+}
+
+
 # ---------------------------------------------------------------------------
 # Shared helpers
 # ---------------------------------------------------------------------------
@@ -170,6 +183,31 @@ def list_frameworks():
         return {"linkedin": linkedin, "reels": reels}
     finally:
         conn.close()
+
+
+@router.post("/reel/ingest")
+def ingest_reel_framework(body: dict):
+    """Upsert a reel framework row extracted on another machine (Mac runs whisper/vision,
+    this API holds the DB of record). Body = column→value dict from extract_reel.py."""
+    if not body.get("id"):
+        raise HTTPException(status_code=422, detail="missing 'id'")
+    unknown = set(body) - _REEL_INGEST_COLUMNS
+    if unknown:
+        raise HTTPException(status_code=422, detail=f"unknown columns: {sorted(unknown)}")
+
+    cols = ", ".join(body)
+    marks = ",".join("?" * len(body))
+    conn = _db()
+    try:
+        conn.execute(
+            f"INSERT OR REPLACE INTO reel_frameworks ({cols}) VALUES ({marks})",
+            tuple(body.values()),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+    logger.info("Ingested reel framework %s", body["id"])
+    return {"id": body["id"], "status": "ok"}
 
 
 @router.get("/{channel}/{fw_id:path}")

@@ -6,6 +6,7 @@ Pipeline: ffprobe → Whisper (timestamped segments) → PySceneDetect → OpenR
 
 import argparse
 import json
+import os
 import re
 import shutil
 import sqlite3
@@ -34,6 +35,11 @@ BEAT_EDIT_REFERENCES_DIR = REFERENCES_DIR / "beat_edit"
 DB_PATH = Path(__file__).parent.parent.parent / "NOTION DIARY FETCHER" / "data" / "notion_diary.db"
 if not DB_PATH.exists():
     DB_PATH = Path(__file__).parent.parent.parent.parent / "NOTION DIARY FETCHER" / "data" / "notion_diary.db"
+
+# When set (e.g. PBS_API_BASE=http://100.85.36.42:9000), extracted frameworks are
+# POSTed to the remote PBS API instead of written to the local SQLite — extraction
+# runs on the Mac (whisper/scenedetect), the DB of record lives on the VM.
+REMOTE_API_BASE = os.environ.get("PBS_API_BASE", "").rstrip("/")
 
 HOOK_TYPES   = {"bold_claim", "question", "story_open", "stat", "pain_point", "contrarian"}
 CTA_TYPES    = {"question", "soft_sell", "follow", "save", "none"}
@@ -356,6 +362,27 @@ def save_yaml(framework_id: str, data: dict) -> Path:
     return path
 
 
+def _persist_row(conn: sqlite3.Connection, row: dict) -> bool:
+    """Local SQLite insert, or POST to the remote PBS API when PBS_API_BASE is set."""
+    try:
+        if REMOTE_API_BASE:
+            import httpx
+            resp = httpx.post(f"{REMOTE_API_BASE}/frameworks/reel/ingest", json=row, timeout=30)
+            resp.raise_for_status()
+            return True
+        cols = ", ".join(row)
+        marks = ",".join("?" * len(row))
+        conn.execute(
+            f"INSERT OR REPLACE INTO reel_frameworks ({cols}) VALUES ({marks})",
+            tuple(row.values()),
+        )
+        conn.commit()
+        return True
+    except Exception as e:
+        logger.warning("Persist failed for %s: %s", row.get("id"), e)
+        return False
+
+
 def insert_db_row(
     conn: sqlite3.Connection,
     framework_id: str,
@@ -378,48 +405,32 @@ def insert_db_row(
     cta  = data.get("cta", {}) or {}
     now  = datetime.now(timezone.utc).isoformat()
 
-    try:
-        conn.execute("""
-            INSERT OR REPLACE INTO reel_frameworks (
-                id, creator, channel, source_file,
-                duration_sec, scene_count, scene_intervals,
-                hook_type, hook_verbal, hook_silence_sec,
-                structure_json, pacing, tone,
-                cta_type, cta_verbal, fits_topics,
-                transcript_json, transcript_text,
-                visual_notes, performance_notes,
-                description, yaml_path, created_at
-            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-        """, (
-            framework_id,
-            _s(data.get("creator", "unknown")),
-            "instagram_reel",
-            _s(data.get("source_file", "")),
-            duration,
-            len(scene_intervals),
-            json.dumps([[s, e] for s, e in scene_intervals]),
-            _s(hook.get("type", "")),
-            _s(hook.get("first_line", "")),
-            hook_silence,
-            json.dumps(data.get("structure", [])),
-            _s(data.get("pacing", "")),
-            _s(data.get("tone", "")),
-            _s(cta.get("type", "")),
-            _s(cta.get("verbal", "")),
-            json.dumps(data.get("fits_topics", [])),
-            json.dumps(segments),
-            full_text,
-            "",
-            _s(data.get("performance_notes", "")),
-            _s(data.get("description", "")),
-            str(yaml_path),
-            now,
-        ))
-        conn.commit()
-        return True
-    except Exception as e:
-        logger.warning("DB insert failed for %s: %s", framework_id, e)
-        return False
+    row = {
+        "id": framework_id,
+        "creator": _s(data.get("creator", "unknown")),
+        "channel": "instagram_reel",
+        "source_file": _s(data.get("source_file", "")),
+        "duration_sec": duration,
+        "scene_count": len(scene_intervals),
+        "scene_intervals": json.dumps([[s, e] for s, e in scene_intervals]),
+        "hook_type": _s(hook.get("type", "")),
+        "hook_verbal": _s(hook.get("first_line", "")),
+        "hook_silence_sec": hook_silence,
+        "structure_json": json.dumps(data.get("structure", [])),
+        "pacing": _s(data.get("pacing", "")),
+        "tone": _s(data.get("tone", "")),
+        "cta_type": _s(cta.get("type", "")),
+        "cta_verbal": _s(cta.get("verbal", "")),
+        "fits_topics": json.dumps(data.get("fits_topics", [])),
+        "transcript_json": json.dumps(segments),
+        "transcript_text": full_text,
+        "visual_notes": "",
+        "performance_notes": _s(data.get("performance_notes", "")),
+        "description": _s(data.get("description", "")),
+        "yaml_path": str(yaml_path),
+        "created_at": now,
+    }
+    return _persist_row(conn, row)
 
 
 def insert_db_row_beat_edit(
@@ -449,49 +460,33 @@ def insert_db_row_beat_edit(
     )
     now = datetime.now(timezone.utc).isoformat()
 
-    try:
-        conn.execute("""
-            INSERT OR REPLACE INTO reel_frameworks (
-                id, creator, channel, source_file,
-                duration_sec, scene_count, scene_intervals,
-                hook_type, hook_verbal, hook_silence_sec,
-                structure_json, pacing, tone,
-                cta_type, cta_verbal, fits_topics,
-                transcript_json, transcript_text,
-                visual_notes, performance_notes,
-                description, yaml_path, created_at, video_format
-            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-        """, (
-            framework_id,
-            _s(data.get("creator", "unknown")),
-            "instagram_reel",
-            _s(data.get("source_file", "")),
-            duration,
-            len(scene_intervals),
-            json.dumps([[s, e] for s, e in scene_intervals]),
-            _s(data.get("hook_type", "")),
-            "",
-            None,
-            json.dumps(beats),
-            "fast",
-            _s(data.get("tone", "")),
-            "",
-            "",
-            json.dumps(data.get("fits_topics", [])),
-            "[]",
-            on_screen_text,
-            visual_notes,
-            "",
-            _s(data.get("description", "")),
-            str(yaml_path),
-            now,
-            "beat_edit",
-        ))
-        conn.commit()
-        return True
-    except Exception as e:
-        logger.warning("DB insert failed for %s: %s", framework_id, e)
-        return False
+    row = {
+        "id": framework_id,
+        "creator": _s(data.get("creator", "unknown")),
+        "channel": "instagram_reel",
+        "source_file": _s(data.get("source_file", "")),
+        "duration_sec": duration,
+        "scene_count": len(scene_intervals),
+        "scene_intervals": json.dumps([[s, e] for s, e in scene_intervals]),
+        "hook_type": _s(data.get("hook_type", "")),
+        "hook_verbal": "",
+        "hook_silence_sec": None,
+        "structure_json": json.dumps(beats),
+        "pacing": "fast",
+        "tone": _s(data.get("tone", "")),
+        "cta_type": "",
+        "cta_verbal": "",
+        "fits_topics": json.dumps(data.get("fits_topics", [])),
+        "transcript_json": "[]",
+        "transcript_text": on_screen_text,
+        "visual_notes": visual_notes,
+        "performance_notes": "",
+        "description": _s(data.get("description", "")),
+        "yaml_path": str(yaml_path),
+        "created_at": now,
+        "video_format": "beat_edit",
+    }
+    return _persist_row(conn, row)
 
 
 # ---------------------------------------------------------------------------
@@ -738,6 +733,46 @@ def run_extraction(cfg: dict, single_file: Path | None, dry_run: bool) -> None:
     sys.exit(0 if failed == 0 else 1)
 
 
+def run_beat_edit_extraction(cfg: dict, vision_cfg: dict, single_file: Path | None) -> None:
+    prompt_template = BEAT_PROMPT_PATH.read_text(encoding="utf-8")
+
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    init_db(conn)
+
+    if single_file:
+        files = [single_file]
+    elif BEAT_EDIT_REFERENCES_DIR.exists():
+        files = sorted(p for p in BEAT_EDIT_REFERENCES_DIR.iterdir() if p.suffix.lower() == ".mp4")
+    else:
+        files = []
+    if not files:
+        logger.error("No .mp4 files found in %s", BEAT_EDIT_REFERENCES_DIR)
+        conn.close()
+        sys.exit(1)
+
+    results = []
+    for filepath in files:
+        print(f"  Processing {filepath.name} (beat-edit) ...", end=" ", flush=True)
+        framework_id, status = process_beat_edit_file(filepath, cfg, vision_cfg, prompt_template, conn)
+        marker = "OK" if status.startswith("OK") else "FAILED"
+        print(f"→ {framework_id} [{marker}]")
+        results.append((filepath.name, framework_id, status))
+
+    conn.close()
+
+    succeeded = sum(1 for _, _, s in results if s.startswith("OK"))
+    failed    = sum(1 for _, _, s in results if s.startswith("FAILED"))
+    print(f"\nSummary: {len(results)} processed | {succeeded} OK | {failed} failed")
+    if failed:
+        print("\nFailed:")
+        for name, _, status in results:
+            if status.startswith("FAILED"):
+                print(f"  {name}: {status}")
+
+    sys.exit(0 if failed == 0 else 1)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Extract Instagram Reel frameworks")
     parser.add_argument("--whisper-model", default=None,
@@ -748,6 +783,8 @@ if __name__ == "__main__":
                         help="Print assembled prompt; no LLM call, no DB writes")
     parser.add_argument("--with-vision", action="store_true",
                         help="(v1.1: disabled) Vision pass via cloud LLM")
+    parser.add_argument("--beat-edit", action="store_true",
+                        help="Extract beat-edit references (references/beat_edit/, vision path)")
     args = parser.parse_args()
 
     if args.with_vision:
@@ -759,4 +796,8 @@ if __name__ == "__main__":
         cfg["whisper_model"] = args.whisper_model
 
     single_file = args.file.resolve() if args.file else None
-    run_extraction(cfg, single_file, args.dry_run)
+    if args.beat_edit:
+        vision_cfg = llm_client.load_config("reel_extractor.vision")
+        run_beat_edit_extraction(cfg, vision_cfg, single_file)
+    else:
+        run_extraction(cfg, single_file, args.dry_run)
