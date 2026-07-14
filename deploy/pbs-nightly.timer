@@ -1,8 +1,8 @@
 [Unit]
-Description=Run PBS nightly at 03:00 JST (18:00 UTC)
+Description=Run PBS nightly at 03:00 (VM local time = JST)
 
 [Timer]
-OnCalendar=*-*-* 18:00:00
+OnCalendar=*-*-* 03:00:00
 Persistent=true
 
 [Install]
