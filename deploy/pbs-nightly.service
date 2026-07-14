@@ -1,0 +1,8 @@
+[Unit]
+Description=PBS nightly Notion sync + SQLite backup
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=maxkiyuna
+ExecStart=/home/maxkiyuna/pbs/deploy/pbs-nightly.sh

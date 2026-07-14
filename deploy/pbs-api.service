@@ -1,0 +1,18 @@
+[Unit]
+Description=PBS unified API (FastAPI :9000, jobs worker in-process)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=maxkiyuna
+WorkingDirectory=/home/maxkiyuna/pbs/NOTION DIARY FETCHER
+ExecStart=/home/maxkiyuna/.local/bin/uv run uvicorn api.main:app --host 0.0.0.0 --port 9000
+Restart=on-failure
+RestartSec=5
+# e2-micro: keep PBS from starving the fitness tracker on :8000
+MemoryHigh=350M
+MemoryMax=450M
+
+[Install]
+WantedBy=multi-user.target
