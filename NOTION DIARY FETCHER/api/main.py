@@ -11,6 +11,9 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://localhost:5174"],
+    # Vercel-hosted Studio (any deployment of the project). The API itself stays
+    # tailnet-private — CORS here only lets the browser of a tailnet device call it.
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_methods=["*"],
     allow_headers=["*"],
 )
