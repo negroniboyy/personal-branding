@@ -1,169 +1,206 @@
-# Personal Brand — Agent Guide
+# Personal Brand (PBS) — Agent Guide
 
-> ⚠️ **v3 REBOOT PENDING (2026-07-03):** the diary→warehouse→story-first pipeline described below is being retired — see `handoff/blueprint_v3.0_pbs_reboot.md` (the PRD) and `md/checkpoint.md` before trusting any Ingest/Extract/story-first section here. Brandguide references remain valid (rebuilt same day). This file gets rewritten after v3 implementation lands.
+Start here. This is the stable architecture map for the `personal_brand` repo — Max's
+content decision system. It is this repo's equivalent of
+`OpenMontage/OpenMontage/AGENT_GUIDE.md`: read it before acting, then follow pointers
+to the live/detail docs rather than re-deriving context from scratch.
 
-Start here. This is the complete operating guide and index for the `personal_brand` repo — Max's content creation system. It is the `personal_brand` equivalent of `OpenMontage/OpenMontage/AGENT_GUIDE.md`: read this before acting, then follow the pointers to the live/detail docs rather than re-deriving context from scratch.
+**Doc roles:** this file = the *stable map* (architecture, file roles, conventions).
+`../md/checkpoint.md` at the BrandStudio root = the *live pointer* (what's true right
+now). `README.md` = the *ops manual* (machines, deploys, disaster recovery). For
+anything time-sensitive, checkpoint wins over this file.
 
 ## First Interaction — Session Bootstrap
 
-Before anything else, follow `CLAUDE.md` §0: read `md/checkpoint.md` (live session state) and `md/code_index.md` if present (file → role index). These are **live documents**, updated via `/session-checkpoint` — never stale summaries baked into this file. Notify the user briefly once loaded.
+Follow the root `CLAUDE.md` §0: read **`../md/checkpoint.md`** and
+**`../md/code_index.md`** at the **BrandStudio root** (one level up). This repo's own
+`md/` directory is retired — pointer stubs only, never read or write it. Notify the
+user briefly once loaded.
 
-This file (`PERSONALBRAND.md`) is the **stable map** — architecture, pipeline, file roles, conventions. `md/checkpoint.md` is the **live pointer** — what's true right now, what changed last session, what's next. Read both; trust checkpoint.md over this file for anything time-sensitive (current version, active blockers, pending ops).
+## What PBS Is (v3 architecture, live since 2026-07)
 
-## What Personal Brand Is
-
-Personal Brand is Max's end-to-end content pipeline: raw life material (Notion diary entries) → scored, structured story material → voice-aware LinkedIn/Instagram drafts → human review → posted content. It is **not** a video production tool — for that, it hands off to **OpenMontage** (see "Relationship to OpenMontage" below).
+PBS turns ideas into voice-matched content and puts a human decision gate in front of
+everything that ships. It is **not** a video production tool — approved reel scripts
+hand off to **OpenMontage** (see below).
 
 ```
-Notion Diary → Stage1 Extractor (LLM) → story_nodes (SQLite, scored/tagged)
-  → Studio / Writer / Reels UI (voice-aware generation via OpenRouter/Ollama)
-  → human review (approve/kill + verdict) → caption+CTA → posted
-  → (optional) OpenMontage: turn an approved reel script into a produced video asset
+Notion CONTENT DB  ◀──two-way sync──▶  ideas (SQLite, VM)
+        ideas → framework picker (LLM) → tiered generation (OpenRouter)
+              → content_drafts (LinkedIn) / reel_scripts (versioned reels)
+        → Studio review: approve / kill + verdict note (feeds future prompts)
+        → caption + CTA → posted   (status pushed back to Notion)
+        → approved reel script → OpenMontage (manual handoff, video production)
 ```
 
-Core loop, daily: open **Studio** tab → review queue → approve/kill (with a verdict note — it feeds future prompts) → on approval, generate Caption+CTA → mark posted. A nightly routine tops up the queue and mirrors approved items to Asana.
+Key v3 facts (things that CHANGED from the retired v2 — do not trust old docs):
 
-**Primary goal (UAT phase, per checkpoint):** stop building, start shipping — get 30 pieces generated/approved/posted. The system is considered built; the current job is execution, not further feature work, unless the user asks for it.
+- **Ideas come from Notion**, synced two ways (`notion_ideas/`): Notion wins on
+  content, PBS wins on lifecycle status. There is **no diary pipeline, no
+  story_nodes, no narrative warehouse** — all archived under `_archive/`.
+- **All LLM calls go through OpenRouter** (`config/openrouter_models.yaml` routes
+  per-task, primary + fallback, no silent model swap). **No Ollama.**
+- **Reel scripts are tiered and versioned**: tiers `raw` / `beat-edit` / `scripted`
+  (templates in `frameworks/instagram_frameworks/prompts/script_writer_{raw,beat,idea}.txt`),
+  regeneration creates v2/v3… in one version family; the "live" version drives status.
+- **Generation is asynchronous**: every generate/sync/scan runs as a job in the
+  SQLite-backed queue (`jobs/`), executed by a worker thread inside the API process.
+  The frontend polls via `frontend/src/lib/useJob.js`.
+- **Deployment is two-machine** (v4 Phase 0): the API + DB run 24/7 on the `maxlab`
+  GCP VM; the Mac runs the frontend and heavy extraction, pushing results to the VM
+  over Tailscale. Full ops detail: `README.md`.
+
+**Current goal (v4 masterplan, `handoff/blueprint_v4.0_masterplan.md`):** stop
+building, start shipping. Phases gate on posted content: B at 5 posts, C at 15, D
+at 30. No new feature work unless the user asks.
 
 ## Stack
 
-Python 3.12 · `uv` · FastAPI (port 9000) · SQLite · React 18 · Vite · Tailwind v3.4. Run via `./start.sh` (opens 2 terminal tabs: API + frontend). See `README.md` for manual quickstart commands.
+Python 3.12 · `uv` · FastAPI (:9000) · SQLite · React 18 · Vite · Tailwind.
+Local dev: `./start.sh` (2 tabs) or see `README.md` §3. Production: systemd on the VM.
 
 ## Reading Order
 
-1. `CLAUDE.md` — root guardrails: model routing, blueprint protocol, sub-agent pre-flight, context management. **Always in force.**
-2. `md/checkpoint.md` — what's true right now (status, file map deltas, next steps, constraints).
-3. This file (`PERSONALBRAND.md`) — stable architecture map and index.
-4. The relevant subsystem doc from the tables below — know *how* before touching a subsystem.
-5. `brandguide/` — the taste/voice layer — **mandatory** before writing or reviewing any generation prompt.
-
-## Model Routing (from `CLAUDE.md`)
-
-| Phase | Model | Directive |
-|---|---|---|
-| Planning | Opus 4.7 | Build a Blueprint (`handoff/blueprint_v[X.X]_[feature].md`); no code until alignment |
-| Execution | Sonnet | Zero verbosity; code/diffs only |
-| Testing/Scout | Haiku | Validate results, fetch data/files |
-
-Announce every model switch to the user. Announce every time a CLAUDE.md protocol (blueprint, sub-agent pre-flight, checkpoint trigger) is being followed.
+1. Root `CLAUDE.md` (BrandStudio) — guardrails: model routing, blueprint protocol. **Always in force.**
+2. `../md/checkpoint.md` — what's true right now.
+3. This file — stable map.
+4. `../md/code_index.md` — file → role / key symbols, per subsystem.
+5. `brandguide/` — **mandatory** before writing or reviewing any generation prompt.
 
 ## Pipeline Stages & Canonical Artifacts
 
 | Stage | What happens | Canonical output | Key files |
 |---|---|---|---|
-| **Ingest** | Notion diary synced locally | `notion_diary.db` rows | `NOTION DIARY FETCHER/src/notion_fetcher`, `uv run sync` |
-| **Extract** | LLM extracts story_nodes from diary pages, dedups, scores | `story_nodes` (SQLite) | `narrative_warehouse/stage1_extractor.py`, `stage2_synthesizer.py`, `normalizer.py` |
-| **Generate** | Voice-aware LinkedIn/Reel draft generation (freeform idea path or story-first path) | `content_drafts` / `reel_scripts` rows | `content_writer/prompt_builder.py`, `frameworks/instagram_frameworks/script_writer.py`, `ideas/routes.py` |
-| **Review (lifecycle)** | Human approves/kills with verdict; verdict feeds back into future prompts | `status`, `verdict`, `verdict_note` columns | `shared/shared/lifecycle.py`, `frontend/src/components/StudioTab.jsx` |
+| **Sync** | Notion CONTENT DB ⇄ local ideas (nightly on VM + on-demand button) | `ideas` rows | `notion_ideas/sync.py`, `mapper.py` |
+| **Generate** | Idea → framework pick → tiered, voice-injected draft/script (async job) | `content_drafts` / `reel_scripts` rows | `ideas/routes.py`, `frameworks/picker.py`, `frameworks/instagram_frameworks/script_writer.py`, `content_writer/service.py`, `jobs/handlers.py` |
+| **Review** | Human approves/kills with verdict note; verdicts feed future prompts | `status`, `verdict_note` | `shared/shared/lifecycle.py`, `frontend/src/components/StudioTab.jsx` |
 | **Package** | Caption + CTA generated (gated until approved) | `caption`, `cta` | `shared/shared/lifecycle.py` (`CAPTION_PROMPT`) |
-| **Post** | Marked posted; mirrored to Asana Content calendar | `posted_at`, `asana_task_gid` | Nightly Cowork routine, `handoff/routine_nightly_content.md` |
-| **(Optional) Produce** | Approved reel script becomes a video asset | OpenMontage project under `projects/<name>/` | See "Relationship to OpenMontage" |
-
-Batch/one-off generation utilities: `batch_generate.py` (rotates unused story_nodes across N frameworks), `gen_one_node.py` (one node × all frameworks, bypasses an int-typed CLI bug — use text `--story-id`), `migrate_backfill_processed.py` (one-time backfill).
+| **Post** | Marked posted; status pushed back to Notion | `posted_at` + Notion status | `notion_ideas/sync.py::push_status` |
+| **Extract** (side channel) | Reference MP4 → framework (talking-head via Whisper, beat-edit via vision). **Mac-only**, pushes to VM | `reel_frameworks` rows | `frameworks/instagram_frameworks/extract_reel.py` (`PBS_API_BASE`, `--beat-edit`), `POST /frameworks/reel/ingest` |
+| **Produce** (external) | Approved reel script becomes a video | OpenMontage project | See "Relationship to OpenMontage" |
 
 ## Directory Index
 
 | Path | Role |
 |---|---|
-| `NOTION DIARY FETCHER/` | FastAPI backend root — `api/main.py` mounts all routers on :9000; `config.toml` is the single config source (subsystem `provider = openrouter\|ollama`); `src/notion_fetcher` is the sync client; `data/notion_diary.db` is the live SQLite DB |
-| `frontend/` | React 18 + Vite + Tailwind UI. `src/apiBase.js` centralizes the API origin (`VITE_API_BASE` env, falls back to `:9000`). `src/App.jsx` owns tab state + deep-link handoff between tabs. |
-| `frontend/src/components/` | `StudioTab.jsx` (home — backlog meter, queue, approve/kill/caption/post), `ReelWriter.jsx` / `ContentWriter.jsx` (per-channel generation UIs), `IdeasTab.jsx`/`IdeaDetail.jsx` (freeform idea generation), `StoryNodeList.jsx`/`StoryNodeCard.jsx`/`StoryPreview.jsx` (Warehouse browsing), `FrameworksTab.jsx`, `NarrativeDashboard.jsx`, `ModelSelector.jsx` |
-| `narrative_warehouse/` | Diary → story_nodes pipeline. `stage1_extractor.py` (extraction + dedup guard), `stage2_synthesizer.py`, `normalizer.py`, `db.py`, `config.py`. Has its own `tests/`. |
-| `frameworks/instagram_frameworks/` | Reel generation. `script_writer.py` (story-first + freeform builders, romantic-content filter, story rotation), `llm_client.py` (`complete()` → `(content, model_used)`), `prompts/script_writer.txt` (story-first) and `prompts/script_writer_idea.txt` (idea-tuned), `extract_reel.py` (reference-reel framework extraction), `frameworks/`, `references/` |
-| `frameworks/linkedin_frameworks/` | LinkedIn equivalent of the above — `extract_linkedin.py`, `llm_client.py`, `schema.yaml`, `frameworks/`, `prompts/`, `references/` |
-| `content_writer/` | LinkedIn draft generation service — `prompt_builder.py` (`build_freeform_prompt`, voice+CTA filtering), `service.py`, `db.py`, `models.py`, `repository.py`, `recommender.py`, `api_routes.py` |
-| `ideas/` | `/ideas` router — CRUD + `generate_linkedin`/`generate_reel`, calling the voice-aware freeform builders in `content_writer`/`frameworks` |
-| `shared/shared/` | Cross-cutting: `lifecycle.py` (STATUSES, status migrations, `CAPTION_PROMPT`, `get_feedback_block` — the source of truth for the review/post lifecycle), `md_mirror.py`, `logger.py` |
-| `openrouter/` | `router.py` (cascade: primary → secondary → ollama, returns actual model used, no silent fallback masking), `client.py` (OpenAI-SDK wrapper, retry + SSE) |
+| `NOTION DIARY FETCHER/` | FastAPI backend root (name is historical). `api/main.py` mounts all routers on :9000 + runs migrations and the jobs worker at startup; `api/reel_routes.py` (reel versioning); `config.toml`; `data/notion_diary.db` (**production copy lives on the VM**); `.env` (secrets, never in git) |
+| `frontend/` | React 18 + Vite UI. `src/apiBase.js` reads `VITE_API_BASE`; `src/App.jsx` owns tab state; `src/lib/useJob.js` is the job-polling hook every generation surface uses |
+| `ideas/` | `/ideas` router — CRUD + idea-linked generation. **The primary surface.** `repository.py` derives idea status from linked drafts/reels (live-version aware) |
+| `notion_ideas/` | Two-way Notion sync — `sync.py` (pull/push), `mapper.py` (field mapping), `config.py` |
+| `content_writer/` | LinkedIn draft service — `service.py`, `prompt_builder.py` (voice-injected), `repository.py`, `recommender.py` |
+| `frameworks/` | `api_routes.py` (framework CRUD + outcome stats + `/reel/ingest`), `picker.py` (LLM picker, `video_format`-aware, keyword fallback) |
+| `frameworks/instagram_frameworks/` | `script_writer.py` (TIER_TEMPLATES, versioned `save_script`), `extract_reel.py` (Mac-only extraction), `llm_client.py` (**`complete()` returns a `(content, model_used)` tuple**), `prompts/`, `references/` (gitignored MP4s) |
+| `frameworks/linkedin_frameworks/` | LinkedIn framework storage (`frameworks/`, `schema.yaml`); its extractor is archived |
+| `jobs/` | Background job queue — `queue.py` (persistence, worker, crash recovery, `register()`), `handlers.py` (all job kinds), `routes.py` |
+| `openrouter/` | `router.py` (cascade primary → secondary, returns actual model, no silent swap), `client.py` |
 | `config/` | `openrouter_models.yaml` — single source of truth for model routing per task |
-| `brandguide/` | **The taste/voice layer.** See dedicated section below. |
-| `handoff/` | Blueprints (`blueprint_v[X.X]_[feature].md`) — one per planned feature, per the CLAUDE.md Blueprint Protocol. `routine_nightly_content.md` is the canonical mirror of the Cowork nightly-routine prompt — edit here, then push to the scheduled task. |
-| `knowledge_base/` | Reference creator summaries, title/script pattern libraries used to seed frameworks (`eliasmaman.*`, `titulos_seguidores.*`, `script_templates.json`, `title_patterns.json`, `knowledge_registry.json`) |
-| `memory/` | Cross-session memory: `glossary.md` (decoder ring for terms/tools), `reference_creators.md` (style profiles of creators Max studies), `projects/personal_brand_system.md` (system-level project memory) |
-| `scripts/` | Generated reel script `.md` mirrors, one file per script, named `<date>_reel-<n>_<framework>-v<version>.md` |
-| `drafts/` | Generated LinkedIn draft `.md` mirrors (same mirroring pattern as `scripts/`) |
-| `content assets/` | Static image assets used in content pieces |
-| `logs/` | Rotating logs per subsystem (`narrative_warehouse`, `frameworks_api`, `md_mirror`, `instagram_frameworks`) |
-| `md/` | **Live session documents** — `checkpoint.md` (state) and `code_index.md` (file index), maintained via `/session-checkpoint`. Read first, edit in place, never append. |
-| `docs/` | Misc reference docs (`superpowers/specs`) |
+| `shared/shared/` | `lifecycle.py` (STATUSES, CAPTION_PROMPT, `get_feedback_block` — source of truth for the review lifecycle), `md_mirror.py`, `logger.py`. Installed as the `shared` package |
+| `brandguide/` | **The voice/taste layer** — see next section |
+| `deploy/` | Ops assets: systemd units, nightly script, Mac backup-pull, launchd plist (see `README.md`) |
+| `handoff/` | Blueprints (PRDs): `blueprint_v3.0`–`v3.4` (v3 trail), `blueprint_v4.0_masterplan.md` (**current roadmap**), `insight_helper_workflow.md` (idea top-up skill) |
+| `scripts/` · `drafts/` | Human-readable `.md` mirrors of generated reel scripts / LinkedIn drafts (`md_mirror.py`). DB is the source of truth |
+| `knowledge_base/` · `memory/` | Reference creator summaries / cross-session notes (`memory/glossary.md` = decoder ring). Low-traffic; `knowledge_base/` is slated for archive |
+| `md/` | **RETIRED** — pointer stubs to the root `../md/`. Never read or write |
+| `_archive/` | All retired v2 code: diary sync, narrative warehouse, story-first UI, Ollama client, LinkedIn extractor, batch CLIs. Archive-don't-delete policy — but never build on it |
 
 ## The Brandguide Layer (Voice & Taste — Read Before Generating)
 
-`brandguide/` is the control centre for *what makes content sound like Max* and *what's working*. Nothing should be generated or reviewed without this context loaded:
+Nothing should be generated or reviewed without this context loaded:
 
 | File | Role |
 |---|---|
-| `brandguide/voice_dna.md` | Voice source of truth — sentence rhythm, who's speaking, tone rules. Distilled inline into `prompts/script_writer.txt` for the story-first path. |
-| `brandguide/voice_dna_block.txt` | **Shared voice kit** (VOICE DNA + 6 craft moves + transformation example) — injected into both idea-path freeform builders (`script_writer_idea.txt` for reels, `prompt_builder.py` for LinkedIn). Single source of truth — edit here, not per-prompt. |
-| `brandguide/brandbook.md` | Overall positioning: identity-first, data-informed, reflective, structured, in-progress. Core audience definition. |
-| `brandguide/linkedin.md` | LinkedIn-specific positioning and tone (curious not authoritative, reflective not motivational). |
-| `brandguide/content_workflow.md` | The production SOP and its **non-negotiable time caps** (30 min planning / 5 min draft gen / 20 min review / 5 min image gen). |
-| `brandguide/production_playbook.md` | UI-based weekly production loop for the Reel tab specifically, plus Definition of Done. |
-| `brandguide/content_strategy_log.md` | **Living strategist log** — per-node verdicts, which frameworks fit which voice patterns, what's been learned. Update after every generation/review pass. |
-| `brandguide/campaign_01_builder_in_public.md` | Active campaign brief (niche-discovery arc) — read when planning content batches, not one-off pieces. |
+| `brandguide/voice_dna.md` | Voice source of truth — sentence rhythm, who's speaking, tone rules |
+| `brandguide/voice_dna_block.txt` | **Shared voice kit** injected into every generation prompt (reels + LinkedIn). Single source of truth — edit here, never per-prompt |
+| `brandguide/brandbook.md` | Positioning, audience, and the production time caps |
+| `brandguide/reference_analysis_reference1.md` | Worked analysis of a reference creator |
 
-**Rule of thumb:** tune voice/craft moves → edit `voice_dna_block.txt`. Tune reel output format → `prompts/script_writer.txt`. Log a finding/verdict → `content_strategy_log.md`. Don't duplicate voice text across prompt files — everything routes through the shared block.
+**Rule of thumb:** tune voice/craft moves → `voice_dna_block.txt`. Tune reel output
+format per tier → `prompts/script_writer_{raw,beat,idea}.txt`. Don't duplicate voice
+text across prompt files.
 
 ## Edit-Here-When Table
 
 | Change | File |
 |---|---|
+| v4 roadmap / phases / gates | `handoff/blueprint_v4.0_masterplan.md` |
 | Add/change model for a task | `config/openrouter_models.yaml` |
-| Switch subsystem provider (cloud ↔ local) | `NOTION DIARY FETCHER/config.toml` — `provider` under the relevant subsystem |
-| Adjust the romantic-content filter | `frameworks/instagram_frameworks/script_writer.py` → `ROMANTIC_TAGS` + `_romantic_words` |
-| Change reel script output format | `frameworks/instagram_frameworks/prompts/script_writer.txt` |
-| Tune voice / craft moves (both idea paths) | `brandguide/voice_dna_block.txt` |
-| Reel/LinkedIn generation logic | `frameworks/instagram_frameworks/script_writer.py` / `content_writer/prompt_builder.py` |
-| Stage1 dedup / skip logic | `narrative_warehouse/stage1_extractor.py` |
-| Batch generation defaults | `batch_generate.py` → `run()` argparse defaults |
-| Lifecycle statuses / caption prompt / feedback loop | `shared/shared/lifecycle.py` |
-| Log a voice/framework finding or verdict | `brandguide/content_strategy_log.md` |
-| Nightly routine behavior | `handoff/routine_nightly_content.md`, then sync to the Cowork scheduled task |
+| Reel tier templates | `frameworks/instagram_frameworks/prompts/script_writer_{idea,raw,beat}.txt` |
+| Reel version-family logic | `jobs/handlers.py::_handle_generate_reel`, `NOTION DIARY FETCHER/api/reel_routes.py` |
+| Notion ideas sync (pull/push/mapping) | `notion_ideas/` |
+| Add a background job kind | `jobs/handlers.py` + `jobs/queue.py` `register()` |
+| Tune voice / craft moves | `brandguide/voice_dna_block.txt` |
+| Lifecycle statuses / caption prompt / feedback | `shared/shared/lifecycle.py` |
+| Beat-edit extraction prompt/logic | `extract_reel.py::process_beat_edit_file`, `prompts/extract_reel_beat.txt` |
+| Ops (units, backups, recovery) | `deploy/` + `README.md` |
+| Video pipeline / render / TTS / avatar | **Not here** — `OpenMontage/OpenMontage/AGENT_GUIDE.md` first, mandatory |
 
 ## Conventions
 
-- **Blueprint Protocol:** any non-trivial feature gets `handoff/blueprint_v[X.X]_[feature].md` before code — state, logic, specs, Definition of Done. See `CLAUDE.md` §2.
-- **Live docs, not append-only:** `md/checkpoint.md` and `md/code_index.md` are edited in place via `/session-checkpoint`, never appended to.
-- **Business logic stays out of UI files** — React components call into `frontend/src/*Api.js` wrappers; no direct fetch scattered in components.
-- **MD mirroring:** every generated script/draft gets mirrored to `scripts/` or `drafts/` as a dated `.md` file (`shared/shared/md_mirror.py`) — the DB is the source of truth, the `.md` mirror is for human/grep-friendly review.
-- **No silent fallback masking:** `openrouter/router.py` cascades primary → secondary → ollama, but a failing selected model surfaces as an error, not a silently swapped model. Same spirit as OpenMontage's "no silent runtime swap" rule.
-- **Sandbox constraint:** OpenRouter is blocked behind a SOCKS proxy in the sandbox — all real generation runs on Max's machine, not in an agent sandbox.
+- **Blueprint Protocol:** non-trivial features get `handoff/blueprint_v[X.X]_[feature].md`
+  before code — state, logic, specs, Definition of Done (root `CLAUDE.md` §2).
+- **Live docs, not append-only:** root `../md/checkpoint.md` / `code_index.md` are
+  edited in place via `/session-checkpoint`, never appended to.
+- **Business logic stays out of UI files** — React components call `src/*Api.js`
+  wrappers; new generation surfaces wire through `jobs.queue.enqueue` + `useJob`.
+- **MD mirroring:** generated scripts/drafts mirror to `scripts/`/`drafts/` as dated
+  `.md` files; the DB is the source of truth.
+- **No silent fallback masking:** the OpenRouter cascade surfaces which model actually
+  ran; a failing selected model is an error, not a hidden swap.
+- **Gotcha:** `llm_client.complete()` / `complete_vision()` return a
+  **`(content, model_used)` tuple** — callers must unpack.
+- **Heavy deps are Mac-only:** whisper/scenedetect live in the `extraction` extra
+  (`uv sync --extra extraction` locally; plain `uv sync` on the VM).
+- **Sandbox constraint:** OpenRouter is blocked in agent sandboxes — real generation
+  runs on Max's machines only.
 
 ## Relationship to OpenMontage
 
-Personal Brand and OpenMontage are separate repos designed to run in parallel and hand off to each other:
+Two repos, two layers, manual handoff:
 
-- **Personal Brand** owns the *content decision layer* — what story to tell, in what voice, for which platform, and whether it's good enough to ship (Studio review/verdict loop).
-- **OpenMontage** (`OpenMontage/OpenMontage/`) owns the *production layer* — turning an approved script/idea into an actual video asset, via its pipeline system (see `OpenMontage/OpenMontage/AGENT_GUIDE.md`, Rule Zero: all production goes through a pipeline, never ad-hoc tool calls).
+- **PBS** owns the *content decision layer* — what story, what voice, which platform,
+  and whether it's good enough to ship (Studio verdict loop).
+- **OpenMontage** (`OpenMontage/OpenMontage/`) owns the *production layer* — turning an
+  approved script into a video via its pipeline system (Rule Zero: all production goes
+  through a pipeline, never ad-hoc tool calls).
 
-**Max's actual OpenMontage workflow** (`OpenMontage/OpenMontage/MY_WORKFLOW.md`): shoot and cut in DaVinci Resolve → bring the draft MP4 into OpenMontage → generate assets (text overlays, subtitles, visuals, localizations) via the **Hybrid pipeline** (`pipeline_defs/hybrid.yaml`) → bring assets back into DaVinci for final fine-tuning. Reference-reel analysis (transcript, pacing, cut rhythm) and brand-voice-brainstorm (reference + Personal Brand's `brandguide/` as the brief) are both first-class OpenMontage entry points that should be fed by Personal Brand's voice/brand docs, not generic prompts.
+**Max's actual workflow** (`OpenMontage/OpenMontage/MY_WORKFLOW.md`): shoot + cut in
+DaVinci Resolve → draft MP4 into OpenMontage → generate assets (overlays, subtitles,
+visuals, localizations) via the Hybrid pipeline → back into DaVinci for final polish.
 
-**Practical handoff points:**
-1. A `reel_scripts` row reaches `status = approved` in Personal Brand's Studio → its script text + verdict notes become the brief for an OpenMontage `hybrid` or `talking-head` pipeline run.
-2. `brandguide/voice_dna.md` / `voice_dna_block.txt` / `brandguide/campaign_01_builder_in_public.md` are the right inputs to OpenMontage's "Brand Voice Brainstorm" workflow when asking it to adapt a reference reel to Max's voice.
-3. Nothing in Personal Brand currently automates this handoff — it's manual today (copy script/brief into an OpenMontage session). If automating becomes worthwhile, it belongs in a `handoff/blueprint_v[X.X]_openmontage_bridge.md` per the Blueprint Protocol, not as an ad-hoc script.
+**Handoff points:**
+1. A `reel_scripts` row reaches `approved` in Studio → its script text + verdict notes
+   + `brandguide/voice_dna.md` become the brief for an OpenMontage run.
+2. Brandguide files are the right inputs to OpenMontage's brand-voice workflows —
+   feed them, not generic prompts.
+3. The handoff is **manual today**. v4 Phase A plans a brief-compiler file handoff
+   (still human-triggered). If automating further, that's a blueprint, not an ad-hoc
+   script.
 
-Do not duplicate OpenMontage's pipeline/tool docs here — when a task is actually about video production (pipelines, render runtimes, Layer 3 vendor skills), switch context and follow `OpenMontage/OpenMontage/AGENT_GUIDE.md` instead.
+When a task is actually about video production, switch context: read
+`OpenMontage/OpenMontage/AGENT_GUIDE.md` **before responding** — it routes your first
+action. OpenMontage runs on the Mac only; the VM never touches video.
 
 ## Quick Lookup
 
 | Question | Where to look |
 |---|---|
-| What's true right now (status, blockers, next steps)? | `md/checkpoint.md` |
-| What does this file/module do? | This file's Directory Index, or `md/code_index.md` |
+| What's true right now (status, blockers, next)? | `../md/checkpoint.md` (BrandStudio root) |
+| What does this file/module do? | `../md/code_index.md`, or the Directory Index above |
+| How do I run / deploy / recover this? | `README.md` |
 | How should generated content sound? | `brandguide/voice_dna.md` + `voice_dna_block.txt` |
-| Is this content good? What's worked before? | `brandguide/content_strategy_log.md` |
-| What's the weekly production loop? | `brandguide/production_playbook.md` (reels), `brandguide/content_workflow.md` (general) |
-| How do I run this locally? | `README.md` |
-| What's a term/tool I don't recognize? | `memory/glossary.md` |
-| How do I turn an approved script into a video? | `OpenMontage/OpenMontage/MY_WORKFLOW.md` (this repo's "Relationship to OpenMontage" section is the bridge) |
-| Where does a planned feature's design live? | `handoff/blueprint_v[X.X]_[feature].md` |
+| What's the roadmap and what's gated? | `handoff/blueprint_v4.0_masterplan.md` |
+| How was feature X designed? | `handoff/blueprint_v[X.X]_[feature].md` |
+| A term/tool I don't recognize? | `memory/glossary.md` |
+| How do I turn an approved script into a video? | `OpenMontage/OpenMontage/MY_WORKFLOW.md` |
+| Out of content ideas? | `/insight-helper` skill (`handoff/insight_helper_workflow.md`) |
 
 ## What Not To Do
 
 - Don't generate or judge content without loading `brandguide/` voice context first.
-- Don't hand-edit `md/checkpoint.md` into an append log — it's a live snapshot, keep it current in place.
-- Don't duplicate voice/tone text into a new prompt file — route through `brandguide/voice_dna_block.txt`.
-- Don't build video-production logic inside Personal Brand — that's OpenMontage's job; hand off instead.
-- Don't skip the Blueprint Protocol for non-trivial features — planning model builds the blueprint, execution model implements it.
-- Don't treat this file as live state — for current status/blockers, `md/checkpoint.md` wins.
+- Don't read or write this repo's `md/` — the live docs are at the BrandStudio root.
+- Don't build on anything in `_archive/` — it's retired v2 code kept for reference.
+- Don't duplicate voice/tone text into prompt files — route through `voice_dna_block.txt`.
+- Don't build video-production logic inside PBS — hand off to OpenMontage.
+- Don't run `uv sync --extra extraction` on the VM (disk can't fit torch), and don't
+  expect extraction/scan to work on the VM at all — it's a Mac-side CLI act.
+- Don't skip the Blueprint Protocol for non-trivial features.
+- Don't treat this file as live state — `../md/checkpoint.md` wins.
